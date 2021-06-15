@@ -18,11 +18,7 @@
  * @author: yujiechen
  * @date 2021-06-04
  */
-#include <bcos-crypto/hash/Keccak256.h>
-#include <bcos-crypto/hash/SM3.h>
-#include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
-#include <bcos-crypto/signature/sm2/SM2Crypto.h>
-#include <bcos-framework/interfaces/consensus/ConsensusNode.h>
+#include "Common.h"
 #include <bcos-framework/interfaces/crypto/CryptoSuite.h>
 #include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockFactory.h>
@@ -32,12 +28,8 @@
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/testutils/faker/FakeDispatcher.h>
 #include <bcos-framework/testutils/faker/FakeFrontService.h>
-#include <bcos-framework/testutils/faker/FakeLedger.h>
 #include <bcos-framework/testutils/faker/FakeStorage.h>
-#include <bcos-pbft/pbft/PBFTFactory.h>
-#include <bcos-sync/BlockSyncFactory.h>
 #include <bcos-txpool/TxPool.h>
-#include <bcos-txpool/TxPoolFactory.h>
 
 using namespace bcos;
 using namespace bcos::crypto;
@@ -46,58 +38,14 @@ using namespace bcos::consensus;
 using namespace bcos::txpool;
 using namespace bcos::dispatcher;
 using namespace bcos::storage;
+using namespace bcos::node;
 using namespace bcos::front;
 using namespace bcos::test;
 using namespace bcos::sealer;
 using namespace bcos::sync;
 using namespace std;
 
-inline CryptoSuite::Ptr createCryptoSuite(bool _sm)
-{
-    Hash::Ptr hashImpl;
-    SignatureCrypto::Ptr signatureImpl;
-    if (!_sm)
-    {
-        hashImpl = std::make_shared<Keccak256>();
-        signatureImpl = std::make_shared<Secp256k1Crypto>();
-    }
-    else
-    {
-        hashImpl = std::make_shared<SM3>();
-        signatureImpl = std::make_shared<SM2Crypto>();
-    }
-    return std::make_shared<CryptoSuite>(hashImpl, signatureImpl, nullptr);
-}
-
-class NodeConfig
-{
-public:
-    using Ptr = std::shared_ptr<NodeConfig>;
-    NodeConfig(PBFTFactory::Ptr _pbftFactory, TxPoolFactory::Ptr _txpoolFactory,
-        LedgerInterface::Ptr _ledger, std::shared_ptr<SealerFactory> _sealerFactory,
-        BlockSyncFactory::Ptr _blockSyncFactory)
-      : m_pbftFactory(_pbftFactory),
-        m_txpoolFactory(_txpoolFactory),
-        m_ledger(_ledger),
-        m_sealerFactory(_sealerFactory),
-        m_blockSyncFactory(_blockSyncFactory)
-    {}
-
-    PBFTFactory::Ptr pbftFactory() { return m_pbftFactory; }
-    TxPoolFactory::Ptr txpoolFactory() { return m_txpoolFactory; }
-    LedgerInterface::Ptr ledger() { return m_ledger; }
-    std::shared_ptr<SealerFactory> sealerFactory() { return m_sealerFactory; }
-
-    BlockSyncFactory::Ptr blockSyncFactory() { return m_blockSyncFactory; }
-
-private:
-    PBFTFactory::Ptr m_pbftFactory;
-    TxPoolFactory::Ptr m_txpoolFactory;
-    LedgerInterface::Ptr m_ledger;
-    std::shared_ptr<SealerFactory> m_sealerFactory;
-    BlockSyncFactory::Ptr m_blockSyncFactory;
-};
-inline NodeConfig::Ptr createNode(CryptoSuite::Ptr _cryptoSuite, BlockFactory::Ptr _blockFactory,
+inline NodeObjects::Ptr createNode(CryptoSuite::Ptr _cryptoSuite, BlockFactory::Ptr _blockFactory,
     FakeGateWay::Ptr _gateWay, std::string const& _groupId, std::string const& _chainId,
     int64_t _blockLimit, unsigned _minSealTime, size_t _txCountLimit, unsigned _consensusTimeout,
     bool _connected = true)
@@ -138,84 +86,8 @@ inline NodeConfig::Ptr createNode(CryptoSuite::Ptr _cryptoSuite, BlockFactory::P
         _gateWay->addConsensusInterface(keyPair->publicKey(), pbftFactory->consensus());
         _gateWay->addTxPool(keyPair->publicKey(), txpoolFactory->txpool());
     }
-    return std::make_shared<NodeConfig>(
+    return std::make_shared<NodeObjects>(
         pbftFactory, txpoolFactory, ledger, sealerFactory, blockSyncFactory);
-}
-
-inline void appendConsensusNodeList(LedgerInterface::Ptr _ledger, std::vector<PublicPtr>& _nodeList)
-{
-    auto ledger = std::dynamic_pointer_cast<FakeLedger>(_ledger);
-    auto ledgerConfig = ledger->ledgerConfig();
-    for (auto node : _nodeList)
-    {
-        auto nodeInfo = std::make_shared<ConsensusNode>(node, 1);
-        ledgerConfig->mutableConsensusNodeList().push_back(nodeInfo);
-    }
-}
-
-void initAndStartNode(NodeConfig::Ptr _nodeConfig, NodeIDSet const& _connectedNodes)
-{
-    auto pbftFactory = _nodeConfig->pbftFactory();
-    auto sealer = pbftFactory->pbftConfig()->sealer();
-    auto pbft = pbftFactory->consensus();
-    auto txpool = std::dynamic_pointer_cast<TxPool>(_nodeConfig->txpoolFactory()->txpool());
-    // init txpool
-    _nodeConfig->txpoolFactory()->init(sealer);
-    // init sealer
-    _nodeConfig->sealerFactory()->init(pbft);
-    // init PBFT
-    _nodeConfig->blockSyncFactory()->init();
-    pbftFactory->init(_nodeConfig->blockSyncFactory()->sync());
-
-    // start txpool
-    txpool->transactionSync()->config()->setConnectedNodeList(_connectedNodes);
-    txpool->start();
-    // start sealer
-    sealer->start();
-    // start PBFT
-    pbft->start();
-}
-
-inline void createAndSubmitTx(CryptoSuite::Ptr _cryptoSuite, std::vector<NodeConfig::Ptr> _nodeList,
-    int64_t _blockLimit, std::string const& _groupId, std::string const& _chainId)
-{
-    u256 nonce = utcTime();
-    size_t txsNum = 0;
-    while (true)
-    {
-        auto selectedNode = _nodeList[(txsNum % _nodeList.size())];
-        auto ledger = std::dynamic_pointer_cast<FakeLedger>(selectedNode->ledger());
-        int64_t blockLimit = ledger->blockNumber() + _blockLimit / 2;
-        auto tx = fakeTransaction(_cryptoSuite, nonce, blockLimit, _chainId, _groupId);
-        auto encodedTxData = tx->encode();
-        auto txData = std::make_shared<bytes>(encodedTxData.begin(), encodedTxData.end());
-        selectedNode->txpoolFactory()->txpool()->asyncSubmit(
-            txData,
-            [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
-                if (_error == nullptr)
-                {
-                    LOG(DEBUG) << LOG_DESC("submit transaction success")
-                               << LOG_KV("hash", tx->hash().abridged())
-                               << LOG_KV("status", _result->status());
-                    return;
-                }
-                LOG(DEBUG) << LOG_DESC("submit transaction failed")
-                           << LOG_KV("code", _error->errorCode())
-                           << LOG_KV("msg", _error->errorMessage());
-            },
-            [](Error::Ptr _error) {
-                if (_error == nullptr)
-                {
-                    return;
-                }
-                LOG(DEBUG) << LOG_DESC("submit transaction exception")
-                           << LOG_KV("code", _error->errorCode())
-                           << LOG_KV("msg", _error->errorMessage());
-            });
-        txsNum++;
-        nonce++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
 }
 
 int main()
@@ -230,7 +102,7 @@ int main()
     size_t txCountLimit = 1000;
     unsigned consensusTimeout = 3;
     size_t nodeSize = 4;
-    std::vector<NodeConfig::Ptr> nodeList;
+    std::vector<NodeObjects::Ptr> nodeList;
     std::vector<PublicPtr> consensusNodeIdList;
     NodeIDSet connectedNodeList;
     for (size_t i = 0; i < nodeSize; i++)
@@ -247,7 +119,9 @@ int main()
     {
         auto nodeConfig = nodeList[i];
         appendConsensusNodeList(nodeConfig->ledger(), consensusNodeIdList);
-        initAndStartNode(nodeConfig, connectedNodeList);
+        auto txpool = std::dynamic_pointer_cast<TxPool>(nodeConfig->txpoolFactory()->txpool());
+        txpool->transactionSync()->config()->setConnectedNodeList(connectedNodeList);
+        initAndStartNode(nodeConfig);
     }
     createAndSubmitTx(cryptoSuite, nodeList, blockLimit, groupId, chainId);
     return 0;

@@ -1,0 +1,76 @@
+/**
+ *  Copyright (C) 2021 FISCO BCOS.
+ *  SPDX-License-Identifier: Apache-2.0
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ * @brief initializer for the network
+ * @file NetworkInitializer.h
+ * @author: yujiechen
+ * @date 2021-06-10
+ */
+
+#pragma once
+#include "libinitializer/Common.h"
+#include "libinitializer/NodeConfig.h"
+#include <bcos-framework/interfaces/front/FrontServiceInterface.h>
+#include <bcos-framework/interfaces/protocol/Protocol.h>
+#include <memory>
+
+namespace bcos
+{
+namespace gateway
+{
+class Gateway;
+}
+
+namespace front
+{
+class FrontService;
+}
+
+namespace initializer
+{
+class NetworkInitializer
+{
+public:
+    using Ptr = std::shared_ptr<NetworkInitializer>;
+    using SendResponse =
+        std::function<void(std::string const&, int, bcos::crypto::NodeIDPtr, bytesConstRef)>;
+    NetworkInitializer() = default;
+    virtual ~NetworkInitializer() { stop(); }
+
+    virtual void init(std::string const& _configFilePath, NodeConfig::Ptr _nodeConfig,
+        bcos::crypto::NodeIDPtr _nodeID);
+    virtual void start();
+    virtual void stop();
+
+    bcos::front::FrontServiceInterface::Ptr frontService();
+
+    virtual void registerMsgDispatcher(bcos::protocol::ModuleID _moduleID,
+        std::function<void(
+            bcos::crypto::NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data)>
+            _dispatcher);
+
+    SendResponse const& sendResponseHandler() { return m_sendResponseHandler; }
+
+protected:
+    virtual void initGateWay(std::string const& _configFilePath);
+    virtual void initFrontService(NodeConfig::Ptr _nodeConfig, bcos::crypto::NodeIDPtr _nodeID);
+
+private:
+    std::shared_ptr<bcos::gateway::Gateway> m_gateWay;
+    std::shared_ptr<bcos::front::FrontService> m_frontService;
+    SendResponse m_sendResponseHandler;
+};
+}  // namespace initializer
+}  // namespace bcos
