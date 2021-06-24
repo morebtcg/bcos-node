@@ -61,6 +61,11 @@ public:
             bcos::crypto::NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data)>
             _dispatcher);
 
+    virtual void registerGetNodeIDsDispatcher(bcos::protocol::ModuleID _moduleID,
+        std::function<void(std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+            bcos::front::ReceiveMsgFunc _receiveMsgCallback)>
+            _dispatcher);
+
     SendResponse const& sendResponseHandler() { return m_sendResponseHandler; }
 
 protected:

@@ -65,6 +65,8 @@ public:
     size_t txGasLimit() const { return m_txGasLimit; }
     std::string const& genesisData() const { return m_genesisData; }
 
+    bool isWasm() const { return m_isWasm; }
+
 protected:
     virtual void loadTxPoolConfig(boost::property_tree::ptree const& _pt);
     virtual void loadChainConfig(boost::property_tree::ptree const& _pt);
@@ -75,6 +77,8 @@ protected:
     virtual void loadConsensusConfig(boost::property_tree::ptree const& _pt);
 
     virtual void loadLedgerConfig(boost::property_tree::ptree const& _genesisConfig);
+
+    void loadExecutorConfig(boost::property_tree::ptree const& _pt);
 
 private:
     bcos::consensus::ConsensusNodeListPtr parseConsensusNodeList(
@@ -113,6 +117,9 @@ private:
     std::string m_storagePath;
     std::string m_storageDBName = "storage";
     std::string m_stateDBName = "state";
+
+    // executor config
+    bool m_isWasm = false;
 };
 }  // namespace initializer
 }  // namespace bcos

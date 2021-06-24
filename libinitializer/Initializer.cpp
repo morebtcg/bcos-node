@@ -20,7 +20,6 @@
  */
 #include "Initializer.h"
 #include "libinitializer/NodeConfig.h"
-#include <bcos-framework/testutils/faker/FakeDispatcher.h>
 
 using namespace bcos;
 using namespace bcos::initializer;
@@ -61,13 +60,18 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_ledgerInitializer->init(
             m_protocolInitializer->blockFactory(), storageInitializer->storage(), m_nodeConfig);
 
-        // init the dispatcher(TODO: modify the dispatcher to the real dispatcher)
-        auto dispatcher = std::make_shared<bcos::test::FakeDispatcher>();
+        // init the dispatcher
+        m_dispatcherInitializer = std::make_shared<DispatcherInitializer>();
+        m_dispatcherInitializer->init(m_nodeConfig, m_protocolInitializer,
+            m_ledgerInitializer->ledger(), storageInitializer->storage());
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
         m_pbftInitializer->init(m_nodeConfig, m_protocolInitializer, m_networkInitializer,
-            m_ledgerInitializer->ledger(), dispatcher, storageInitializer->storage());
+            m_ledgerInitializer->ledger(), m_dispatcherInitializer->dispatcher(),
+            storageInitializer->storage());
+
+        m_dispatcherInitializer->dispatcher()->init(m_pbftInitializer->txpool());
     }
     catch (std::exception const& e)
     {
@@ -80,6 +84,7 @@ void Initializer::start()
 {
     try
     {
+        m_dispatcherInitializer->start();
         m_networkInitializer->start();
         m_pbftInitializer->start();
     }
@@ -96,6 +101,7 @@ void Initializer::stop()
     {
         m_networkInitializer->stop();
         m_pbftInitializer->stop();
+        m_dispatcherInitializer->stop();
         m_logInitializer->stopLogging();
     }
     catch (std::exception const& e)

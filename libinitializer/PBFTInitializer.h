@@ -50,28 +50,28 @@ public:
     bcos::txpool::TxPoolInterface::Ptr txpool() { return m_txpool; }
 
 protected:
-    virtual bcos::txpool::TxPoolFactory::Ptr createTxPool(NodeConfig::Ptr _nodeConfig,
+    virtual void createTxPool(NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger);
 
-    virtual bcos::sealer::SealerFactory::Ptr createSealer(
+    virtual void createSealer(
         NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer);
 
-    virtual bcos::consensus::PBFTFactory::Ptr createPBFT(NodeConfig::Ptr _nodeConfig,
+    virtual void createPBFT(NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::storage::StorageInterface::Ptr _storage, bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
 
-    virtual bcos::sync::BlockSyncFactory::Ptr createSync(NodeConfig::Ptr _nodeConfig,
+    virtual void createSync(NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
 
 private:
-    bcos::txpool::TxPoolInterface::Ptr m_txpool;
-    bcos::sealer::SealerInterface::Ptr m_sealer;
-    bcos::consensus::ConsensusInterface::Ptr m_pbft;
-    bcos::sync::BlockSyncInterface::Ptr m_blockSync;
+    bcos::txpool::TxPool::Ptr m_txpool;
+    bcos::sealer::Sealer::Ptr m_sealer;
+    bcos::consensus::PBFTImpl::Ptr m_pbft;
+    bcos::sync::BlockSync::Ptr m_blockSync;
 };
 }  // namespace initializer
 }  // namespace bcos

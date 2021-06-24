@@ -19,10 +19,12 @@
  * @date 2021-06-11
  */
 #pragma once
+#include "DispatcherInitializer.h"
 #include "libinitializer/Common.h"
 #include "libinitializer/LedgerInitializer.h"
 #include "libinitializer/NetworkInitializer.h"
 #include "libinitializer/PBFTInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include "libinitializer/StorageInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
@@ -56,6 +58,8 @@ private:
     BoostLogInitializer::Ptr m_logInitializer;
     NetworkInitializer::Ptr m_networkInitializer;
     PBFTInitializer::Ptr m_pbftInitializer;
+
+    std::shared_ptr<DispatcherInitializer> m_dispatcherInitializer;
 };
 }  // namespace initializer
 }  // namespace bcos

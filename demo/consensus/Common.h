@@ -50,29 +50,28 @@ class NodeObjects
 {
 public:
     using Ptr = std::shared_ptr<NodeObjects>;
-    NodeObjects(PBFTFactory::Ptr _pbftFactory, TxPoolFactory::Ptr _txpoolFactory,
-        LedgerInterface::Ptr _ledger, SealerFactory::Ptr _sealerFactory,
-        BlockSyncFactory::Ptr _blockSyncFactory)
-      : m_pbftFactory(_pbftFactory),
-        m_txpoolFactory(_txpoolFactory),
+    NodeObjects(PBFTImpl::Ptr _pbft, TxPool::Ptr _txpool, LedgerInterface::Ptr _ledger,
+        Sealer::Ptr _sealer, BlockSync::Ptr _blockSync)
+      : m_pbft(_pbft),
+        m_txpool(_txpool),
         m_ledger(_ledger),
-        m_sealerFactory(_sealerFactory),
-        m_blockSyncFactory(_blockSyncFactory)
+        m_sealer(_sealer),
+        m_blockSync(_blockSync)
     {}
 
-    PBFTFactory::Ptr pbftFactory() { return m_pbftFactory; }
-    TxPoolFactory::Ptr txpoolFactory() { return m_txpoolFactory; }
+    PBFTImpl::Ptr pbft() { return m_pbft; }
+    TxPool::Ptr txpool() { return m_txpool; }
     LedgerInterface::Ptr ledger() { return m_ledger; }
-    std::shared_ptr<SealerFactory> sealerFactory() { return m_sealerFactory; }
+    std::shared_ptr<Sealer> sealer() { return m_sealer; }
 
-    BlockSyncFactory::Ptr blockSyncFactory() { return m_blockSyncFactory; }
+    BlockSync::Ptr blockSync() { return m_blockSync; }
 
 private:
-    PBFTFactory::Ptr m_pbftFactory;
-    TxPoolFactory::Ptr m_txpoolFactory;
+    PBFTImpl::Ptr m_pbft;
+    TxPool::Ptr m_txpool;
     LedgerInterface::Ptr m_ledger;
-    std::shared_ptr<SealerFactory> m_sealerFactory;
-    BlockSyncFactory::Ptr m_blockSyncFactory;
+    std::shared_ptr<Sealer> m_sealer;
+    BlockSync::Ptr m_blockSync;
 };
 
 inline CryptoSuite::Ptr createCryptoSuite(bool _sm)
@@ -105,20 +104,20 @@ inline void appendConsensusNodeList(LedgerInterface::Ptr _ledger, std::vector<Pu
 
 void initAndStartNode(NodeObjects::Ptr _nodeConfig)
 {
-    auto pbftFactory = _nodeConfig->pbftFactory();
-    auto sealer = pbftFactory->pbftConfig()->sealer();
-    auto pbft = pbftFactory->consensus();
+    auto txpool = _nodeConfig->txpool();
+    auto pbft = _nodeConfig->pbft();
+    auto sealer = _nodeConfig->sealer();
 
     // init txpool
-    _nodeConfig->txpoolFactory()->init(sealer);
+    txpool->init(sealer);
     // init sealer
-    _nodeConfig->sealerFactory()->init(pbft);
+    sealer->init(pbft);
     // init PBFT
-    _nodeConfig->blockSyncFactory()->init();
-    pbftFactory->init(_nodeConfig->blockSyncFactory()->sync());
+    _nodeConfig->blockSync()->init();
+    pbft->init(_nodeConfig->blockSync());
 
     // start txpool
-    _nodeConfig->txpoolFactory()->txpool()->start();
+    txpool->start();
     // start sealer
     sealer->start();
     // start PBFT
@@ -139,7 +138,7 @@ inline void createAndSubmitTx(CryptoSuite::Ptr _cryptoSuite,
         auto tx = fakeTransaction(_cryptoSuite, nonce, blockLimit, _chainId, _groupId);
         auto encodedTxData = tx->encode();
         auto txData = std::make_shared<bytes>(encodedTxData.begin(), encodedTxData.end());
-        selectedNode->txpoolFactory()->txpool()->asyncSubmit(
+        selectedNode->txpool()->asyncSubmit(
             txData,
             [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
                 if (_error == nullptr)

@@ -69,25 +69,28 @@ inline NodeObjects::Ptr createNode(CryptoSuite::Ptr _cryptoSuite, BlockFactory::
     auto txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
     auto txpoolFactory = std::make_shared<TxPoolFactory>(keyPair->publicKey(), _cryptoSuite,
         txResultFactory, _blockFactory, frontService, ledger, _groupId, _chainId, _blockLimit);
+    auto txpool = txpoolFactory->createTxPool();
+
     // create sealer
-    auto sealerFactory =
-        std::make_shared<SealerFactory>(_blockFactory, txpoolFactory->txpool(), _minSealTime);
+    auto sealerFactory = std::make_shared<SealerFactory>(_blockFactory, txpool, _minSealTime);
+    auto sealer = sealerFactory->createSealer();
 
     // create pbft
     auto pbftFactory = std::make_shared<PBFTFactory>(_cryptoSuite, keyPair, frontService, storage,
-        ledger, txpoolFactory->txpool(), sealerFactory->sealer(), dispatcher, _blockFactory,
-        txResultFactory);
+        ledger, txpool, sealer, dispatcher, _blockFactory, txResultFactory);
+    auto pbft = pbftFactory->createPBFT();
 
     // create sync
     auto blockSyncFactory = std::make_shared<BlockSyncFactory>(keyPair->publicKey(), _blockFactory,
-        ledger, frontService, dispatcher, pbftFactory->consensus());
+        txResultFactory, ledger, txpool, frontService, dispatcher, pbft);
+    auto blockSync = blockSyncFactory->createBlockSync();
+
     if (_connected)
     {
-        _gateWay->addConsensusInterface(keyPair->publicKey(), pbftFactory->consensus());
-        _gateWay->addTxPool(keyPair->publicKey(), txpoolFactory->txpool());
+        _gateWay->addConsensusInterface(keyPair->publicKey(), pbft);
+        _gateWay->addTxPool(keyPair->publicKey(), txpool);
     }
-    return std::make_shared<NodeObjects>(
-        pbftFactory, txpoolFactory, ledger, sealerFactory, blockSyncFactory);
+    return std::make_shared<NodeObjects>(pbft, txpool, ledger, sealer, blockSync);
 }
 
 int main()
@@ -110,7 +113,7 @@ int main()
         auto nodeConfig = createNode(cryptoSuite, blockFactory, fakeGateWay, groupId, chainId,
             blockLimit, minSealTime, txCountLimit, consensusTimeout, true);
         nodeList.push_back(nodeConfig);
-        auto nodeId = nodeConfig->pbftFactory()->pbftConfig()->keyPair()->publicKey();
+        auto nodeId = nodeConfig->pbft()->pbftEngine()->pbftConfig()->keyPair()->publicKey();
         consensusNodeIdList.push_back(nodeId);
         connectedNodeList.insert(nodeId);
     }
@@ -119,7 +122,7 @@ int main()
     {
         auto nodeConfig = nodeList[i];
         appendConsensusNodeList(nodeConfig->ledger(), consensusNodeIdList);
-        auto txpool = std::dynamic_pointer_cast<TxPool>(nodeConfig->txpoolFactory()->txpool());
+        auto txpool = nodeConfig->txpool();
         txpool->transactionSync()->config()->setConnectedNodeList(connectedNodeList);
         initAndStartNode(nodeConfig);
     }

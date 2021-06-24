@@ -36,11 +36,13 @@ FetchContent_MakeAvailable(bcos-cmake-scripts)
 set(BCOS_NODE_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
 list(APPEND CMAKE_MODULE_PATH ${BCOS_CMAKE_SCRIPTS_DIR})
 list(APPEND CMAKE_MODULE_PATH ${BCOS_NODE_CMAKE_DIR})
+set(HUNTER_CONFIGURATION_TYPES Release CACHE STRING "Build type of Hunter packages")
+set(HUNTER_USE_CACHE_SERVERS NO CACHE STRING "Download cache from cache server" FORCE)
 #init hunter
 include(HunterGate)
 HunterGate(
-    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/67ea989d75ca1560d6f3139dacda8da1dad0f978.tar.gz"
-    SHA1 "50919176ffd124cdc9a75f258e104a600b8d0368"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/f88ce89a9fcd557b7fb2aa0f7abaa3c541dc6903.tar.gz"
+    SHA1 "b7792231bf64539602e696e32bfc163c9bc1812a"
     FILEPATH "${BCOS_NODE_CMAKE_DIR}/config.cmake"
 )
 project(bcos-node VERSION "3.0.0")
@@ -67,6 +69,9 @@ include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
 include(InstallBcosGateWayDependencies)
+include(InstallBcosDispatcherDependencies)
+hunter_add_package(evmc)
+include(ProjectExecutor)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)
@@ -74,12 +79,12 @@ include(CopyClangFormat)
 add_subdirectory(demo)
 add_subdirectory(libinitializer)
 
-if (TESTS)    
+if (TESTS)
     enable_testing()
     set(CTEST_OUTPUT_ON_FAILURE TRUE)
 endif()
 
-# for doxygen: 
+# for doxygen:
 include(BuildDocs)
 buildDoc(bcos-node-doc)
 

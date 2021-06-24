@@ -52,6 +52,7 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
     auto receiptFactory = std::make_shared<PBTransactionReceiptFactory>(m_cryptoSuite);
     m_blockFactory =
         std::make_shared<PBBlockFactory>(blockHeaderFactory, transactionFactory, receiptFactory);
+    m_cryptoSuite->setKeyFactory(_nodeConfig->keyFactory());
     m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
     INITIALIZER_LOG(INFO) << LOG_DESC("init blockFactory success");
 

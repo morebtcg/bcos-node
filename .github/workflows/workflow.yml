@@ -34,6 +34,7 @@ jobs:
           path: |
             /home/runner/.hunter
             /Users/runner/.hunter/
+            deps/src
             ccache
           key: hunter-clang-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
@@ -70,21 +71,16 @@ jobs:
       - uses: actions/cache@v2
         id: cache
         with:
-          path: /home/runner/.hunter
+          path: |
+            /home/runner/.hunter
+            /Users/runner/.hunter/
+            deps/src
+            ccache
           key: hunter-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
             hunter-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
             hunter-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             hunter-ubuntu20-v1-notest-${{ runner.temp }}-
-      - uses: actions/cache@v2
-        id: ccache
-        with:
-          path: ccache
-          key: ccache-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-          restore-keys: |
-            ccache-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            ccache-ubuntu20-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            ccache-ubuntu20-v1-notest-${{ runner.temp }}-
       - name: Nightly default
         run: rustup default nightly
       - name: install Ubuntu dependencies
@@ -107,21 +103,16 @@ jobs:
       - uses: actions/cache@v2
         id: cache
         with:
-          path: /home/runner/.hunter
+          path: |
+            /home/runner/.hunter
+            /Users/runner/.hunter/
+            deps/src
+            ccache
           key: hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
             hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
             hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             hunter-ubuntu-v1-notest-${{ runner.temp }}-
-      - uses: actions/cache@v2
-        id: ccache
-        with:
-          path: ccache
-          key: ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-          restore-keys: |
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-
       - name: Nightly default
         run: rustup default nightly
       - name: install Ubuntu dependencies
@@ -149,6 +140,7 @@ jobs:
           path: |
             /home/runner/.hunter
             /github/home/.hunter
+            deps/src
             ccache
           key: hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |

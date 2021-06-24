@@ -33,7 +33,8 @@ using namespace bcos::protocol;
 void NetworkInitializer::init(
     std::string const& _configFilePath, NodeConfig::Ptr _nodeConfig, NodeIDPtr _nodeID)
 {
-    INITIALIZER_LOG(INFO) << LOG_DESC("init the network");
+    INITIALIZER_LOG(INFO) << LOG_DESC("init the network") << LOG_KV("nodeId", _nodeID->shortHex())
+                          << LOG_KV("groupId", _nodeConfig->groupId());
     initGateWay(_configFilePath);
     initFrontService(_nodeConfig, _nodeID);
     std::weak_ptr<FrontService> weakFrontService = m_frontService;
@@ -46,7 +47,18 @@ void NetworkInitializer::init(
             {
                 return;
             }
-            frontService->asyncSendResponse(_id, _moduleID, _dstNode, _data);
+            frontService->asyncSendResponse(
+                _id, _moduleID, _dstNode, _data, [_id, _moduleID, _dstNode](Error::Ptr _error) {
+                    if (_error)
+                    {
+                        INITIALIZER_LOG(WARNING)
+                            << LOG_DESC("sendResonse failed") << LOG_KV("uuid", _id)
+                            << LOG_KV("module", std::to_string(_moduleID))
+                            << LOG_KV("dst", _dstNode->shortHex())
+                            << LOG_KV("code", _error->errorCode())
+                            << LOG_KV("msg", _error->errorMessage());
+                    }
+                });
         }
         catch (std::exception const& e)
         {
@@ -92,4 +104,12 @@ void NetworkInitializer::registerMsgDispatcher(ModuleID _moduleID,
     std::function<void(NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data)> _dispatcher)
 {
     m_frontService->registerModuleMessageDispatcher(_moduleID, _dispatcher);
+}
+
+void NetworkInitializer::registerGetNodeIDsDispatcher(ModuleID _moduleID,
+    std::function<void(std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+        bcos::front::ReceiveMsgFunc _receiveMsgCallback)>
+        _dispatcher)
+{
+    m_frontService->registerModuleNodeIDsDispatcher(_moduleID, _dispatcher);
 }

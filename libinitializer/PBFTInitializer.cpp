@@ -34,6 +34,11 @@ using namespace bcos::initializer;
 
 void PBFTInitializer::start()
 {
+    m_txpool->init(m_sealer);
+    m_sealer->init(m_pbft);
+    m_blockSync->init();
+    m_pbft->init(m_blockSync);
+
     m_txpool->start();
     m_sealer->start();
     m_pbft->start();
@@ -51,21 +56,14 @@ void PBFTInitializer::init(NodeConfig::Ptr _nodeConfig,
     LedgerInterface::Ptr _ledger, DispatcherInterface::Ptr _dispatcher,
     StorageInterface::Ptr _storage)
 {
-    auto txpoolFactory =
-        createTxPool(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger);
-    auto sealerFactory = createSealer(_nodeConfig, _protocolInitializer);
-    auto pbftFactory = createPBFT(
+    createTxPool(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger);
+    createSealer(_nodeConfig, _protocolInitializer);
+    createPBFT(
         _nodeConfig, _protocolInitializer, _networkInitializer, _storage, _ledger, _dispatcher);
-    auto syncFactory =
-        createSync(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger, _dispatcher);
-
-    txpoolFactory->init(m_sealer);
-    sealerFactory->init(m_pbft);
-    syncFactory->init();
-    pbftFactory->init(m_blockSync);
+    createSync(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger, _dispatcher);
 }
 
-TxPoolFactory::Ptr PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
+void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
     ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
     LedgerInterface::Ptr _ledger)
 {
@@ -76,8 +74,8 @@ TxPoolFactory::Ptr PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
         _networkInitializer->frontService(), _ledger, _nodeConfig->groupId(),
         _nodeConfig->chainId(), _nodeConfig->blockLimit());
     // init the txpool
-    m_txpool = txpoolFactory->txpool();
-    auto txpoolConfig = txpoolFactory->txpoolConfig();
+    m_txpool = txpoolFactory->createTxPool();
+    auto txpoolConfig = m_txpool->txpoolConfig();
     txpoolConfig->setPoolLimit(_nodeConfig->txpoolLimit());
     txpoolConfig->setNotifierWorkerNum(_nodeConfig->notifyWorkerNum());
     txpoolConfig->setVerifyWorkerNum(_nodeConfig->verifierWorkerNum());
@@ -108,20 +106,45 @@ TxPoolFactory::Ptr PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
                                          << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
-    return txpoolFactory;
+
+    _networkInitializer->registerGetNodeIDsDispatcher(
+        ModuleID::TxsSync, [weakTxPool](std::shared_ptr<const NodeIDs> _nodeIDs,
+                               bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+            try
+            {
+                auto txpool = weakTxPool.lock();
+                if (!txpool)
+                {
+                    return;
+                }
+                if (!_nodeIDs || _nodeIDs->empty())
+                {
+                    return;
+                }
+                auto nodeIdSet = NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+                txpool->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                INITIALIZER_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
+                                       << LOG_KV("connectedNodeSize", nodeIdSet.size());
+            }
+            catch (std::exception const& e)
+            {
+                INITIALIZER_LOG(WARNING)
+                    << LOG_DESC("call TxPool notifyConnectedNodes dispatcher exception")
+                    << LOG_KV("error", boost::diagnostic_information(e));
+            }
+        });
 }
 
-SealerFactory::Ptr PBFTInitializer::createSealer(
+void PBFTInitializer::createSealer(
     NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer)
 {
     // create sealer
     auto sealerFactory = std::make_shared<SealerFactory>(
         _protocolInitializer->blockFactory(), m_txpool, _nodeConfig->minSealTime());
-    m_sealer = sealerFactory->sealer();
-    return sealerFactory;
+    m_sealer = sealerFactory->createSealer();
 }
 
-PBFTFactory::Ptr PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
+void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
     ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
     StorageInterface::Ptr _storage, LedgerInterface::Ptr _ledger,
     DispatcherInterface::Ptr _dispatcher)
@@ -132,8 +155,8 @@ PBFTFactory::Ptr PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
         _protocolInitializer->keyPair(), _networkInitializer->frontService(), _storage, _ledger,
         m_txpool, m_sealer, _dispatcher, _protocolInitializer->blockFactory(),
         _protocolInitializer->txResultFactory());
-    m_pbft = pbftFactory->consensus();
-    auto pbftConfig = pbftFactory->pbftConfig();
+    m_pbft = pbftFactory->createPBFT();
+    auto pbftConfig = m_pbft->pbftEngine()->pbftConfig();
     pbftConfig->setCheckPointTimeoutInterval(_nodeConfig->checkPointTimeoutInterval());
 
     // regist PBFT message dispatcher
@@ -162,19 +185,18 @@ PBFTFactory::Ptr PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
                                          << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
-    return pbftFactory;
 }
 
-BlockSyncFactory::Ptr PBFTInitializer::createSync(NodeConfig::Ptr,
-    ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-    LedgerInterface::Ptr _ledger, DispatcherInterface::Ptr _dispatcher)
+void PBFTInitializer::createSync(NodeConfig::Ptr, ProtocolInitializer::Ptr _protocolInitializer,
+    NetworkInitializer::Ptr _networkInitializer, LedgerInterface::Ptr _ledger,
+    DispatcherInterface::Ptr _dispatcher)
 {
     // create sync
     auto keyPair = _protocolInitializer->keyPair();
     auto blockSyncFactory = std::make_shared<BlockSyncFactory>(keyPair->publicKey(),
-        _protocolInitializer->blockFactory(), _ledger, _networkInitializer->frontService(),
-        _dispatcher, m_pbft);
-    m_blockSync = blockSyncFactory->sync();
+        _protocolInitializer->blockFactory(), _protocolInitializer->txResultFactory(), _ledger,
+        m_txpool, _networkInitializer->frontService(), _dispatcher, m_pbft);
+    m_blockSync = blockSyncFactory->createBlockSync();
 
     // register block sync message handler
     std::weak_ptr<BlockSyncInterface> weakSync = m_blockSync;
@@ -202,5 +224,4 @@ BlockSyncFactory::Ptr PBFTInitializer::createSync(NodeConfig::Ptr,
                                          << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
-    return blockSyncFactory;
 }
