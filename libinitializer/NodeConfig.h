@@ -24,7 +24,7 @@
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/interfaces/ledger/LedgerConfig.h>
 
-#define NodeConfig_LOG(LEVEL) LOG(LEVEL) << LOG_BADGE("NodeConfig")
+#define NodeConfig_LOG(LEVEL) BCOS_LOG(LEVEL) << LOG_BADGE("NodeConfig")
 namespace bcos
 {
 namespace initializer

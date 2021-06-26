@@ -117,7 +117,7 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
             }
             int64_t txBlockLimit = blockNumber + blockLimit;
             Transaction::Ptr tx;
-            // fake the system transactions
+#if 0
             if (txsNum % 10000 == 0)
             {
                 std::string to = "0x1003";
@@ -129,6 +129,9 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
                 tx = bcos::test::fakeTransaction(cryptoSuite, keyPair, bytes(),
                     helloWorldDeployInput, nonce, txBlockLimit, chainId, groupId);
             }
+#endif
+            tx = bcos::test::fakeTransaction(cryptoSuite, keyPair, bytes(), helloWorldDeployInput,
+                nonce, txBlockLimit, chainId, groupId);
             auto encodedTxData = tx->encode();
             auto txData = std::make_shared<bytes>(encodedTxData.begin(), encodedTxData.end());
             txpool->asyncSubmit(
@@ -136,31 +139,31 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
                 [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
                     if (_error == nullptr)
                     {
-                        LOG(TRACE) << LOG_DESC("submit transaction success")
-                                   << LOG_KV("hash", tx->hash().abridged())
-                                   << LOG_KV("status", _result->status());
+                        BCOS_LOG(TRACE) << LOG_DESC("submit transaction success")
+                                        << LOG_KV("hash", tx->hash().abridged())
+                                        << LOG_KV("status", _result->status());
                         return;
                     }
-                    LOG(TRACE) << LOG_DESC("submit transaction failed")
-                               << LOG_KV("code", _error->errorCode())
-                               << LOG_KV("msg", _error->errorMessage());
+                    BCOS_LOG(TRACE) << LOG_DESC("submit transaction failed")
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
                 },
                 [](Error::Ptr _error) {
                     if (_error == nullptr)
                     {
                         return;
                     }
-                    LOG(DEBUG) << LOG_DESC("submit transaction exception")
-                               << LOG_KV("code", _error->errorCode())
-                               << LOG_KV("msg", _error->errorMessage());
+                    BCOS_LOG(DEBUG) << LOG_DESC("submit transaction exception")
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
                 });
-            nonce = utcTime() + tx->nonce();
+            nonce = tx->nonce() + utcTimeUs();
             txsNum++;
         }
         catch (std::exception const& e)
         {
-            LOG(TRACE) << LOG_DESC("submit tx failed")
-                       << LOG_KV("error", boost::diagnostic_information(e));
+            BCOS_LOG(TRACE) << LOG_DESC("submit tx failed")
+                            << LOG_KV("error", boost::diagnostic_information(e));
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepInterval));
     }

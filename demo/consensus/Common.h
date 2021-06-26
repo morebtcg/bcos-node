@@ -143,23 +143,23 @@ inline void createAndSubmitTx(CryptoSuite::Ptr _cryptoSuite,
             [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
                 if (_error == nullptr)
                 {
-                    LOG(DEBUG) << LOG_DESC("submit transaction success")
-                               << LOG_KV("hash", tx->hash().abridged())
-                               << LOG_KV("status", _result->status());
+                    BCOS_LOG(DEBUG) << LOG_DESC("submit transaction success")
+                                    << LOG_KV("hash", tx->hash().abridged())
+                                    << LOG_KV("status", _result->status());
                     return;
                 }
-                LOG(DEBUG) << LOG_DESC("submit transaction failed")
-                           << LOG_KV("code", _error->errorCode())
-                           << LOG_KV("msg", _error->errorMessage());
+                BCOS_LOG(DEBUG) << LOG_DESC("submit transaction failed")
+                                << LOG_KV("code", _error->errorCode())
+                                << LOG_KV("msg", _error->errorMessage());
             },
             [](Error::Ptr _error) {
                 if (_error == nullptr)
                 {
                     return;
                 }
-                LOG(DEBUG) << LOG_DESC("submit transaction exception")
-                           << LOG_KV("code", _error->errorCode())
-                           << LOG_KV("msg", _error->errorMessage());
+                BCOS_LOG(DEBUG) << LOG_DESC("submit transaction exception")
+                                << LOG_KV("code", _error->errorCode())
+                                << LOG_KV("msg", _error->errorMessage());
             });
         txsNum++;
         nonce++;

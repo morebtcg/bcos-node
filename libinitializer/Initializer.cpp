@@ -21,6 +21,7 @@
 #include "Initializer.h"
 #include "libinitializer/NodeConfig.h"
 
+
 using namespace bcos;
 using namespace bcos::initializer;
 
@@ -35,8 +36,8 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         boost::property_tree::ptree genesisConfig;
         boost::property_tree::read_ini(_genesisFile, genesisConfig);
-        LOG(INFO) << LOG_DESC("init config") << LOG_KV("ini", _configFilePath)
-                  << LOG_KV("genesis", _genesisFile);
+        BCOS_LOG(INFO) << LOG_DESC("init config") << LOG_KV("ini", _configFilePath)
+                       << LOG_KV("genesis", _genesisFile);
 
         // loadConfig
         m_nodeConfig = std::make_shared<NodeConfig>();
@@ -65,13 +66,14 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_dispatcherInitializer->init(m_nodeConfig, m_protocolInitializer,
             m_ledgerInitializer->ledger(), storageInitializer->storage());
 
+        auto dispatcher = m_dispatcherInitializer->dispatcher();
+
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
         m_pbftInitializer->init(m_nodeConfig, m_protocolInitializer, m_networkInitializer,
-            m_ledgerInitializer->ledger(), m_dispatcherInitializer->dispatcher(),
-            storageInitializer->storage());
+            m_ledgerInitializer->ledger(), dispatcher, storageInitializer->storage());
 
-        m_dispatcherInitializer->dispatcher()->init(m_pbftInitializer->txpool());
+        dispatcher->init(m_pbftInitializer->txpool());
     }
     catch (std::exception const& e)
     {
@@ -84,9 +86,12 @@ void Initializer::start()
 {
     try
     {
-        m_dispatcherInitializer->start();
-        m_networkInitializer->start();
-        m_pbftInitializer->start();
+        if (m_dispatcherInitializer)
+            m_dispatcherInitializer->start();
+        if (m_networkInitializer)
+            m_networkInitializer->start();
+        if (m_pbftInitializer)
+            m_pbftInitializer->start();
     }
     catch (std::exception const& e)
     {
@@ -99,10 +104,14 @@ void Initializer::stop()
 {
     try
     {
-        m_networkInitializer->stop();
-        m_pbftInitializer->stop();
-        m_dispatcherInitializer->stop();
-        m_logInitializer->stopLogging();
+        if (m_networkInitializer)
+            m_networkInitializer->stop();
+        if (m_pbftInitializer)
+            m_pbftInitializer->stop();
+        if (m_dispatcherInitializer)
+            m_dispatcherInitializer->stop();
+        if (m_logInitializer)
+            m_logInitializer->stopLogging();
     }
     catch (std::exception const& e)
     {

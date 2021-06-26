@@ -1,57 +1,57 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/75f19d3b9a745c2154d457dfe2bb3350ec606276.tar.gz"
-    SHA1 9645f0c8f044dac18941a4a948193a61792878d9
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/98a2530574ebf546fe38f92bddf3fe33305d9057.tar.gz"
+    SHA1 be626ecd549151564dcec75cd4f2b2579188c237
 )
 hunter_config(bcos-crypto VERSION 3.0.0-local-43df7523
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/f350ea889a0ad44b7efbd528d4829446b80e9665.tar.gz"
-    SHA1 692989c6369d7085559f48264894b115241e8dc7
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/25c8edb7d5cbadb514bbce9733573c8ffdb3600d.tar.gz"
+    SHA1 4a1649e7095f5db58a5ae0671b2278bcccc25f1d
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/e7759806f4f4449effa2a6ab7b466c530d75b292.tar.gz"
-    SHA1 22703ecda6580144aabd9142652e9564d5e84bae
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/ee6dd57a668edaa0f5e67693c86d37183922860f.tar.gz"
+    SHA1 1a05a49aa20bcf50261ef4dca9efa5098755e064
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-bddd4b4e
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/945bd962b52b50d310b10886341c33ced1088e53.tar.gz"
-    SHA1 7d9e7b129a806d3f7dcec170b1ff209ce7625e68
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/4cada40e01afec155ea06f574a7ccb2e8269be90.tar.gz"
+    SHA1 e1e63f52de883fe3ee662408ad5cdb56e47b9a73
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/9f91070404f47c95ca18b6d3a22b6260576ed7c5.tar.gz"
-    SHA1 6eaa3649b8dd44bba5061ad66bdc7092d47a0fd7
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/42b4c5a0b9a4472f62f4b20d7c7b02c831edee3c.tar.gz"
+    SHA1 4b1082b008bcbc174053cbe88c1b709bf3f5375f
 )
 
 hunter_config(bcos-storage VERSION 3.0.0-local
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/77f3a29304526d6e804b398ac3b72510bcabd1c9.tar.gz"
-    SHA1 20a7963b47ed3bc8bc3ed06edce484c26ea9acb0
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/b83313aac5fab7e0420c8b5777b3ca0a2342f436.tar.gz"
+    SHA1 95ad73a304608a9f2022c34f0066f9b7975c606a
 )
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/636232c956edcb7d2897f3e9053761d60abbba10.tar.gz"
-    SHA1 32041436db8e1d46222f92150ed3beb7ff816aa8
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/8cf0922ae5a0f0bb95ded2991f4e79ec92387e12.tar.gz"
+    SHA1 c36f39055f43b93e351af024b0b7c429c0c4414d
 )
 
 hunter_config(bcos-front VERSION 3.0.0-local-2ed687bb
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-front/archive/599e6ed3ca5da17e56f8c051915481785f586c87.tar.gz"
-    SHA1 ad83f5e099cedb5eecec38f6549886bb7e61fbfc
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-front/archive/15e18804aab90def4c2ba7d811024df921f935de.tar.gz"
+    SHA1 1485c64a31b106f912aa1d1878da5d91dc0a2975
 )
 
 hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-gateway/archive/95e3f51eb01b587415dfe8138dace0720450baa1.tar.gz"
-    SHA1 c33df53d62c6b681a355be407d0765822878133e
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-gateway/archive/dee049993d276a238072cb24a3d98b038c4e8137.tar.gz"
+    SHA1 d5e2661b6d0789f6bfa98ef0585c514c4abc4b42
 )
 
 hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/c9983a45a8504fbd27096052a94de1d732f10484.tar.gz"
-    SHA1 60eb5978ffa75ed7e4308d6c74eb5dcc850e612c
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/4b9e0b3db816ae5902e79b4777637e6d2d114386.tar.gz"
+    SHA1 4a1b6a063a079caf5b7062bb66187d387df3b3cc
 )
 
 hunter_config(bcos-executor VERSION 3.0.0-local-d02a7649
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/153a50bbffce4c9b3f99a088e6843b37f853be04.tar.gz"
-    SHA1 8c39ba1bf14f0bae61e1971b0690420ff2f188d4
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/ac6d5d18bddfee86bcc41bedc5636bf7e11dc02e.tar.gz"
+    SHA1 69bfbeeb058f07fc7af4139b4e6923c533a78305
 )
 
 hunter_config(evmc VERSION 7.3.0-d951b1ef
