@@ -2,6 +2,7 @@
 hunter_config(bcos-framework VERSION 3.0.0-local
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/98a2530574ebf546fe38f92bddf3fe33305d9057.tar.gz"
     SHA1 be626ecd549151564dcec75cd4f2b2579188c237
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 hunter_config(bcos-crypto VERSION 3.0.0-local-43df7523
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/25c8edb7d5cbadb514bbce9733573c8ffdb3600d.tar.gz"
@@ -49,9 +50,10 @@ hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
     SHA1 4a1b6a063a079caf5b7062bb66187d387df3b3cc
 )
 
-hunter_config(bcos-executor VERSION 3.0.0-local-d02a7649
+hunter_config(bcos-executor VERSION 3.0.0-local-ac6d5d18
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/ac6d5d18bddfee86bcc41bedc5636bf7e11dc02e.tar.gz"
     SHA1 69bfbeeb058f07fc7af4139b4e6923c533a78305
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
 hunter_config(evmc VERSION 7.3.0-d951b1ef

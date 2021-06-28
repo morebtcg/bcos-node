@@ -1,17 +1,16 @@
 #!/bin/bash
+
 dirpath="$(cd "$(dirname "$0")" && pwd)"
-cd "${dirpath}"
 listen_ip="0.0.0.0"
 listen_port=30300
 node_count=4
 fisco_bcos_exec=""
-output_dir="${dirpath}/nodes"
+output_dir="./nodes"
 binary_name="mini-consensus"
 
 # for cert generation
 ca_cert_dir="${dirpath}"
-output_dir="${dirpath}"
-cert_conf='cert.cnf'
+cert_conf="${output_dir}/cert.cnf"
 sm_cert_conf='sm_cert.cnf'
 days=36500
 rsa_key_length=2048
@@ -282,23 +281,21 @@ EOF
 gen_chain_cert() {
 
     if [ ! -f "${cert_conf}" ]; then
-        generate_cert_conf 'cert.cnf'
-    else
-        cp "${cert_conf}" .
+        generate_cert_conf "${cert_conf}"
     fi
 
     local chaindir="${1}"
 
     file_must_not_exists "${chaindir}"/ca.key
     file_must_not_exists "${chaindir}"/ca.crt
-    file_must_exists 'cert.cnf'
+    file_must_exists "${cert_conf}"
 
     mkdir -p "$chaindir"
     dir_must_exists "$chaindir"
 
-    openssl genrsa -out "${chaindir}"/ca.key "${rsa_key_length}"
-    openssl req -new -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "${chaindir}"/ca.key -out "${chaindir}"/ca.crt
-    cp "cert.cnf" "${chaindir}"
+    openssl genrsa -out "${chaindir}"/ca.key "${rsa_key_length}" 2> /dev/null
+    openssl req -new -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "${chaindir}"/ca.key -out "${chaindir}"/ca.crt 2>/dev/null
+    mv "${cert_conf}" "${chaindir}"
 
     LOG_INFO "Build ca cert successfully!"
 }
@@ -318,10 +315,10 @@ gen_rsa_node_cert() {
     mkdir -p "${ndpath}"
     dir_must_exists "${ndpath}"
 
-    openssl genrsa -out "${ndpath}"/ssl.key "${rsa_key_length}"
+    openssl genrsa -out "${ndpath}"/ssl.key "${rsa_key_length}" 2> /dev/null
     openssl req -new -sha256 -subj "/CN=FISCO-BCOS/O=fisco-bcos/OU=agency" -key "$ndpath"/ssl.key -config "$capath"/cert.cnf -out "$ndpath"/ssl.csr
     openssl x509 -req -days "${days}" -sha256 -CA "${capath}"/ca.crt -CAkey "$capath"/ca.key -CAcreateserial \
-        -in "$ndpath"/ssl.csr -out "$ndpath"/ssl.crt -extensions v4_req -extfile "$capath"/cert.cnf
+        -in "$ndpath"/ssl.csr -out "$ndpath"/ssl.crt -extensions v4_req -extfile "$capath"/cert.cnf 2>/dev/null
 
     openssl pkcs8 -topk8 -in "$ndpath"/ssl.key -out "$ndpath"/pkcs8_node.key -nocrypt
     cp "$capath"/ca.crt "$capath"/cert.cnf "$ndpath"/
@@ -458,11 +455,12 @@ for dir in \${dirs[*]}
 do
     if [[ -f "\${dirpath}/\${dir}/config.ini" && -f "\${dirpath}/\${dir}/start.sh" ]];then
         echo "try to start \${dir}"
-        bash \${dirpath}/\${dir}/start.sh 
+        bash \${dirpath}/\${dir}/start.sh
     fi
 done
 wait
 EOF
+    chmod u+x "${output}/start_all.sh"
 
     cat <<EOF >"${output}/stop_all.sh"
 #!/bin/bash
@@ -474,11 +472,12 @@ for dir in \${dirs[*]}
 do
     if [[ -f "\${dirpath}/\${dir}/config.ini" && -f "\${dirpath}/\${dir}/stop.sh" ]];then
         echo "try to stop \${dir}"
-        bash \${dirpath}/\${dir}/stop.sh 
+        bash \${dirpath}/\${dir}/stop.sh
     fi
 done
 wait
 EOF
+    chmod u+x "${output}/stop_all.sh"
 }
 
 generate_node_scripts() {
@@ -493,12 +492,12 @@ config=\${dirpath}/config.ini
 node=\$(basename \${dirpath})
 pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
 if [ -n "\${pid}" ];then
-        echo "\${node} is running, pid is \${pid}"
+        echo "    \${node} is running, pid is \${pid}"
         exit 0
 fi
 nohup ../${binary_name} -c \${dirpath}/config.ini -g \${dirpath}/config.genesis &
 EOF
-
+    chmod u+x "${output}/start.sh"
     cat <<EOF >"${output}/stop.sh"
 #!/bin/bash
 dirpath="\$(cd "\$(dirname "\$0")" && pwd)"
@@ -508,13 +507,13 @@ config=\${dirpath}/config.ini
 node=\$(basename \${dirpath})
 pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
 if [ -z "\${pid}" ];then
-        echo "\${node} is not running"
+        echo "    \${node} is not running"
         exit 0
 fi
 kill -9 "\${pid}"
 echo "stop \${node} successfully"
 EOF
-
+    chmod u+x "${output}/stop.sh"
     cat <<EOF >"${output}/check.sh"
 #!/bin/bash
 dirpath="\$(cd "\$(dirname "\$0")" && pwd)"
@@ -524,11 +523,12 @@ config=\${dirpath}/config.ini
 node=\$(basename \${dirpath})
 pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
 if [ -z "\${pid}" ];then
-        echo "\${node} is not running"
+        echo "    \${node} is not running"
 else
-        echo "\${node} is running, pid=\${pid}"
+        echo "    \${node} is running, pid=\${pid}"
 fi
 EOF
+    chmod u+x "${output}/check.sh"
 }
 
 generate_connected_nodes() {
@@ -567,6 +567,7 @@ generate_node_cert() {
 generate_chain_cert(){
     local sm_mode="$1"
     local chain_cert_path="$2"
+    mkdir -p "${chain_cert_path}"
     if [[ "${sm_mode}" == "false" ]]; then
         gen_chain_cert "${chain_cert_path}" 2>&1
     else
@@ -773,6 +774,7 @@ EOF
 
 main() {
     check_env
+    # FIXME: use openssl 1.1 to generate gm certificates
     check_and_install_tassl
     parse_params "$@"
 
@@ -799,7 +801,7 @@ main() {
         fi
     done
     for ((i = 0; i < node_count; i++)); do
-        node_dir=${output_dir}/node${i}
+        node_dir="${output_dir}/node${i}"
         mkdir -p "${node_dir}"
         local port=$((listen_port + i))
         generate_node_cert "${sm_mode}" "${ca_cert_dir}" "${node_dir}/conf"
