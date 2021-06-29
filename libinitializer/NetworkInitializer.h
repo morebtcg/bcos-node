@@ -66,8 +66,6 @@ public:
             bcos::front::ReceiveMsgFunc _receiveMsgCallback)>
             _dispatcher);
 
-    SendResponse const& sendResponseHandler() { return m_sendResponseHandler; }
-
 protected:
     virtual void initGateWay(std::string const& _configFilePath);
     virtual void initFrontService(
@@ -76,7 +74,6 @@ protected:
 private:
     std::shared_ptr<bcos::gateway::Gateway> m_gateWay;
     std::shared_ptr<bcos::front::FrontService> m_frontService;
-    SendResponse m_sendResponseHandler;
 };
 }  // namespace initializer
 }  // namespace bcos

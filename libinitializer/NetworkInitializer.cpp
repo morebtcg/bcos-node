@@ -38,35 +38,6 @@ void NetworkInitializer::init(
                           << LOG_KV("groupId", _nodeConfig->groupId());
     initGateWay(_configFilePath);
     initFrontService(_nodeConfig, _nodeID);
-    std::weak_ptr<FrontService> weakFrontService = m_frontService;
-    m_sendResponseHandler = [weakFrontService](std::string const& _id, int _moduleID,
-                                NodeIDPtr _dstNode, bytesConstRef _data) {
-        try
-        {
-            auto frontService = weakFrontService.lock();
-            if (!frontService)
-            {
-                return;
-            }
-            frontService->asyncSendResponse(
-                _id, _moduleID, _dstNode, _data, [_id, _moduleID, _dstNode](Error::Ptr _error) {
-                    if (_error)
-                    {
-                        INITIALIZER_LOG(WARNING)
-                            << LOG_DESC("sendResonse failed") << LOG_KV("uuid", _id)
-                            << LOG_KV("module", std::to_string(_moduleID))
-                            << LOG_KV("dst", _dstNode->shortHex())
-                            << LOG_KV("code", _error->errorCode())
-                            << LOG_KV("msg", _error->errorMessage());
-                    }
-                });
-        }
-        catch (std::exception const& e)
-        {
-            INITIALIZER_LOG(WARNING) << LOG_DESC("sendResonse exception")
-                                     << LOG_KV("error", boost::diagnostic_information(e));
-        }
-    };
 }
 
 FrontServiceInterface::Ptr NetworkInitializer::frontService()

@@ -83,10 +83,8 @@ void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
 
     // register txpool message dispatcher
     std::weak_ptr<TxPoolInterface> weakTxPool = m_txpool;
-    auto sendResponseHandler = _networkInitializer->sendResponseHandler();
-    _networkInitializer->registerMsgDispatcher(
-        ModuleID::TxsSync, [weakTxPool, sendResponseHandler](
-                               NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
+    _networkInitializer->registerMsgDispatcher(ModuleID::TxsSync,
+        [weakTxPool](NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
             try
             {
                 auto txpool = weakTxPool.lock();
@@ -94,12 +92,7 @@ void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
                 {
                     return;
                 }
-                txpool->asyncNotifyTxsSyncMessage(
-                    nullptr, _nodeID, _data,
-                    [_id, _nodeID, sendResponseHandler](bytesConstRef _respData) {
-                        sendResponseHandler(_id, ModuleID::TxsSync, _nodeID, _respData);
-                    },
-                    nullptr);
+                txpool->asyncNotifyTxsSyncMessage(nullptr, _id, _nodeID, _data, nullptr);
             }
             catch (std::exception const& e)
             {
@@ -162,10 +155,8 @@ void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
 
     // regist PBFT message dispatcher
     std::weak_ptr<ConsensusInterface> weakPBFT = m_pbft;
-    auto sendResponseHandler = _networkInitializer->sendResponseHandler();
     _networkInitializer->registerMsgDispatcher(
-        ModuleID::PBFT, [weakPBFT, sendResponseHandler](
-                            NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
+        ModuleID::PBFT, [weakPBFT](NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
             try
             {
                 auto pbft = weakPBFT.lock();
@@ -173,12 +164,7 @@ void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
                 {
                     return;
                 }
-                pbft->asyncNotifyConsensusMessage(
-                    nullptr, _nodeID, _data,
-                    [_id, _nodeID, sendResponseHandler](bytesConstRef _respData) {
-                        sendResponseHandler(_id, ModuleID::PBFT, _nodeID, _respData);
-                    },
-                    nullptr);
+                pbft->asyncNotifyConsensusMessage(nullptr, _id, _nodeID, _data, nullptr);
             }
             catch (std::exception const& e)
             {
@@ -201,10 +187,8 @@ void PBFTInitializer::createSync(NodeConfig::Ptr, ProtocolInitializer::Ptr _prot
 
     // register block sync message handler
     std::weak_ptr<BlockSyncInterface> weakSync = m_blockSync;
-    auto sendResponseHandler = _networkInitializer->sendResponseHandler();
-    _networkInitializer->registerMsgDispatcher(
-        ModuleID::BlockSync, [weakSync, sendResponseHandler](
-                                 NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
+    _networkInitializer->registerMsgDispatcher(ModuleID::BlockSync,
+        [weakSync](NodeIDPtr _nodeID, std::string const& _id, bytesConstRef _data) {
             try
             {
                 auto sync = weakSync.lock();
@@ -212,12 +196,7 @@ void PBFTInitializer::createSync(NodeConfig::Ptr, ProtocolInitializer::Ptr _prot
                 {
                     return;
                 }
-                sync->asyncNotifyBlockSyncMessage(
-                    nullptr, _nodeID, _data,
-                    [_id, _nodeID, sendResponseHandler](bytesConstRef _respData) {
-                        sendResponseHandler(_id, ModuleID::BlockSync, _nodeID, _respData);
-                    },
-                    nullptr);
+                sync->asyncNotifyBlockSyncMessage(nullptr, _id, _nodeID, _data, nullptr);
             }
             catch (std::exception const& e)
             {
