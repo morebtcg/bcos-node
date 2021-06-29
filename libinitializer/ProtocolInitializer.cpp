@@ -35,6 +35,8 @@ using namespace bcos;
 using namespace bcos::protocol;
 using namespace bcos::initializer;
 using namespace bcos::crypto;
+using namespace bcos::tool;
+
 void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
 {
     // TODO: hsm/ed25519

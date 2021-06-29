@@ -20,13 +20,13 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
-#include "libinitializer/NodeConfig.h"
 #include "libinitializer/ProtocolInitializer.h"
 #include <bcos-dispatcher/DispatcherImpl.h>
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 
 namespace bcos
 {
@@ -38,8 +38,8 @@ public:
     DispatcherInitializer() = default;
     virtual ~DispatcherInitializer() {}
 
-    virtual void init(NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
-        bcos::ledger::LedgerInterface::Ptr _ledger,
+    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig,
+        ProtocolInitializer::Ptr _protocolInitializer, bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::storage::StorageInterface::Ptr _stateStorage);
 
     bcos::dispatcher::DispatcherImpl::Ptr dispatcher() { return m_dispatcher; }

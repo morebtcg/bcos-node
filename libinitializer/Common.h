@@ -19,6 +19,7 @@
  * @date 2021-06-10
  */
 #pragma once
+#include <bcos-framework/libtool/Exceptions.h>
 #include <bcos-framework/libutilities/DataConvertUtility.h>
 #include <bcos-framework/libutilities/Exceptions.h>
 #include <bcos-framework/libutilities/FileUtility.h>
@@ -34,8 +35,6 @@ namespace bcos
 {
 namespace initializer
 {
-DERIVE_BCOS_EXCEPTION(InvalidConfig);
-
 inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
 {
     auto keyContent = readContents(boost::filesystem::path(_keyPath));
@@ -63,8 +62,8 @@ inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
         INITIALIZER_LOG(ERROR) << LOG_BADGE("SecureInitializer")
                                << LOG_DESC("parse privateKey failed")
                                << LOG_KV("EINFO", boost::diagnostic_information(e));
-        BOOST_THROW_EXCEPTION(
-            InvalidConfig() << errinfo_comment("SecureInitializer: parse privateKey failed"));
+        BOOST_THROW_EXCEPTION(bcos::tool::InvalidConfig()
+                              << errinfo_comment("SecureInitializer: parse privateKey failed"));
     }
     std::shared_ptr<const BIGNUM> ecPrivateKey(
         EC_KEY_get0_private_key(ecKey.get()), [](const BIGNUM*) {});

@@ -20,8 +20,8 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
-#include "libinitializer/NodeConfig.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 namespace bcos
 {
 namespace initializer
@@ -33,7 +33,7 @@ public:
     StorageInitializer() = default;
     virtual ~StorageInitializer() {}
 
-    virtual void init(NodeConfig::Ptr _nodeConfig);
+    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig);
     bcos::storage::StorageInterface::Ptr storage() { return m_storage; }
 
 private:

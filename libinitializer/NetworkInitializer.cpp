@@ -24,6 +24,7 @@
 #include <bcos-gateway/GatewayFactory.h>
 
 using namespace bcos;
+using namespace bcos::tool;
 using namespace bcos::initializer;
 using namespace bcos::gateway;
 using namespace bcos::front;

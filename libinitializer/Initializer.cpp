@@ -19,10 +19,11 @@
  * @date 2021-06-11
  */
 #include "Initializer.h"
-#include "libinitializer/NodeConfig.h"
-
+#include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 
 using namespace bcos;
+using namespace bcos::tool;
 using namespace bcos::initializer;
 
 void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile)
@@ -40,7 +41,8 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
                        << LOG_KV("genesis", _genesisFile);
 
         // loadConfig
-        m_nodeConfig = std::make_shared<NodeConfig>();
+        m_nodeConfig =
+            std::make_shared<NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
         m_nodeConfig->loadConfig(pt, genesisConfig);
 
         // init the protocol

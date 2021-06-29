@@ -46,13 +46,13 @@ public:
     virtual void stop();
 
     // for fake transactions(TODO: remove this)
-    NodeConfig::Ptr nodeConfig() { return m_nodeConfig; }
+    bcos::tool::NodeConfig::Ptr nodeConfig() { return m_nodeConfig; }
     ProtocolInitializer::Ptr protocolInitializer() { return m_protocolInitializer; }
     PBFTInitializer::Ptr pbftInitializer() { return m_pbftInitializer; }
     LedgerInitializer::Ptr ledgerInitializer() { return m_ledgerInitializer; }
 
 private:
-    NodeConfig::Ptr m_nodeConfig;
+    bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
     LedgerInitializer::Ptr m_ledgerInitializer;
     BoostLogInitializer::Ptr m_logInitializer;

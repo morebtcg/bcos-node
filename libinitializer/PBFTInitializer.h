@@ -38,8 +38,9 @@ public:
     PBFTInitializer() = default;
     virtual ~PBFTInitializer() { stop(); }
 
-    virtual void init(NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
-        NetworkInitializer::Ptr _networkInitializer, bcos::ledger::LedgerInterface::Ptr _ledger,
+    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig,
+        ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
+        bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher,
         bcos::storage::StorageInterface::Ptr _storage);
 
@@ -50,19 +51,19 @@ public:
     bcos::txpool::TxPoolInterface::Ptr txpool() { return m_txpool; }
 
 protected:
-    virtual void createTxPool(NodeConfig::Ptr _nodeConfig,
+    virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger);
 
     virtual void createSealer(
-        NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer);
+        bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer);
 
-    virtual void createPBFT(NodeConfig::Ptr _nodeConfig,
+    virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::storage::StorageInterface::Ptr _storage, bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
 
-    virtual void createSync(NodeConfig::Ptr _nodeConfig,
+    virtual void createSync(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);

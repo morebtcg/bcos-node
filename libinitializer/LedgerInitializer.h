@@ -20,10 +20,10 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
-#include "libinitializer/NodeConfig.h"
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-ledger/ledger/Ledger.h>
 
 namespace bcos
@@ -38,7 +38,7 @@ public:
     virtual ~LedgerInitializer() {}
 
     virtual void init(bcos::protocol::BlockFactory::Ptr _blockFactory,
-        bcos::storage::StorageInterface::Ptr _storage, NodeConfig::Ptr _nodeConfig)
+        bcos::storage::StorageInterface::Ptr _storage, bcos::tool::NodeConfig::Ptr _nodeConfig)
     {
         auto ledger = std::make_shared<bcos::ledger::Ledger>(_blockFactory, _storage);
         // build genesis block

@@ -21,6 +21,7 @@
 #include "PBFTInitializer.h"
 
 using namespace bcos;
+using namespace bcos::tool;
 using namespace bcos::protocol;
 using namespace bcos::crypto;
 using namespace bcos::consensus;

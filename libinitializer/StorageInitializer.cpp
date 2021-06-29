@@ -26,6 +26,7 @@
 using namespace bcos;
 using namespace bcos::initializer;
 using namespace bcos::storage;
+using namespace bcos::tool;
 
 void StorageInitializer::init(NodeConfig::Ptr _nodeConfig)
 {

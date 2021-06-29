@@ -20,11 +20,11 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
-#include "libinitializer/NodeConfig.h"
 #include <bcos-framework/interfaces/crypto/CryptoSuite.h>
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/protocol/TransactionSubmitResultFactory.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 
 namespace bcos
 {
@@ -37,7 +37,7 @@ public:
     ProtocolInitializer() = default;
     virtual ~ProtocolInitializer() {}
 
-    virtual void init(NodeConfig::Ptr _nodeConfig);
+    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
     bcos::crypto::CryptoSuite::Ptr cryptoSuite() { return m_cryptoSuite; }
     bcos::protocol::BlockFactory::Ptr blockFactory() { return m_blockFactory; }
@@ -51,7 +51,7 @@ public:
 private:
     void createCryptoSuite();
     void createSMCryptoSuite();
-    void loadKeyPair(NodeConfig::Ptr _nodeConfig);
+    void loadKeyPair(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
 private:
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;

@@ -139,8 +139,7 @@ inline void createAndSubmitTx(CryptoSuite::Ptr _cryptoSuite,
         auto encodedTxData = tx->encode();
         auto txData = std::make_shared<bytes>(encodedTxData.begin(), encodedTxData.end());
         selectedNode->txpool()->asyncSubmit(
-            txData,
-            [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
+            txData, [tx](Error::Ptr _error, TransactionSubmitResult::Ptr _result) {
                 if (_error == nullptr)
                 {
                     BCOS_LOG(DEBUG) << LOG_DESC("submit transaction success")
@@ -149,15 +148,6 @@ inline void createAndSubmitTx(CryptoSuite::Ptr _cryptoSuite,
                     return;
                 }
                 BCOS_LOG(DEBUG) << LOG_DESC("submit transaction failed")
-                                << LOG_KV("code", _error->errorCode())
-                                << LOG_KV("msg", _error->errorMessage());
-            },
-            [](Error::Ptr _error) {
-                if (_error == nullptr)
-                {
-                    return;
-                }
-                BCOS_LOG(DEBUG) << LOG_DESC("submit transaction exception")
                                 << LOG_KV("code", _error->errorCode())
                                 << LOG_KV("msg", _error->errorMessage());
             });

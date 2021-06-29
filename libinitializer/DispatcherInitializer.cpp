@@ -22,6 +22,7 @@
 #include <bcos-executor/Executor.h>
 
 using namespace bcos;
+using namespace bcos::tool;
 using namespace bcos::initializer;
 using namespace bcos::dispatcher;
 using namespace bcos::executor;

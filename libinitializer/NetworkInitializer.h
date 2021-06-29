@@ -21,9 +21,9 @@
 
 #pragma once
 #include "libinitializer/Common.h"
-#include "libinitializer/NodeConfig.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/protocol/Protocol.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <memory>
 
 namespace bcos
@@ -49,7 +49,7 @@ public:
     NetworkInitializer() = default;
     virtual ~NetworkInitializer() { stop(); }
 
-    virtual void init(std::string const& _configFilePath, NodeConfig::Ptr _nodeConfig,
+    virtual void init(std::string const& _configFilePath, bcos::tool::NodeConfig::Ptr _nodeConfig,
         bcos::crypto::NodeIDPtr _nodeID);
     virtual void start();
     virtual void stop();
@@ -70,7 +70,8 @@ public:
 
 protected:
     virtual void initGateWay(std::string const& _configFilePath);
-    virtual void initFrontService(NodeConfig::Ptr _nodeConfig, bcos::crypto::NodeIDPtr _nodeID);
+    virtual void initFrontService(
+        bcos::tool::NodeConfig::Ptr _nodeConfig, bcos::crypto::NodeIDPtr _nodeID);
 
 private:
     std::shared_ptr<bcos::gateway::Gateway> m_gateWay;
