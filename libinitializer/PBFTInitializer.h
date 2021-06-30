@@ -68,6 +68,8 @@ protected:
         bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
 
+    virtual void registerHandlers();
+
 private:
     bcos::txpool::TxPool::Ptr m_txpool;
     bcos::sealer::Sealer::Ptr m_sealer;

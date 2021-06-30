@@ -11,13 +11,13 @@ hunter_config(bcos-crypto VERSION 3.0.0-local-43df7523
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/1a3c7763e19263aad21a4c5ba57a0f028b5138e4.tar.gz"
-    SHA1 3e93aeca3b6469cff4b51baaead3365fcb76a1fc
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/4be8d162aa867ff35fe9cfde068dc54537d12730.tar.gz"
+    SHA1 a4c506cf1abea28d8b6b3e5ddccecc7d581d25df
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-bddd4b4e
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/01b455df5973da4458bd70ad3475f8a78ac19755.tar.gz"
-    SHA1 dc97b56939d21a92ca257d1d10820f1c4efe075f
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/1ee911bc7e0d2d74590035b6bacebc1d300ebe2e.tar.gz"
+    SHA1 bf129763df6e8594b8d98bf32e4938df652914ae
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264

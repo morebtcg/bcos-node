@@ -35,13 +35,14 @@ using namespace bcos::initializer;
 
 void PBFTInitializer::start()
 {
-    m_txpool->init(m_sealer);
+    m_txpool->init();
     m_sealer->init(m_pbft);
     m_blockSync->init();
-    m_pbft->init(m_blockSync);
+    m_pbft->init();
 
     m_txpool->start();
     m_sealer->start();
+    m_blockSync->start();
     m_pbft->start();
 }
 
@@ -49,6 +50,7 @@ void PBFTInitializer::stop()
 {
     m_txpool->stop();
     m_sealer->stop();
+    m_blockSync->stop();
     m_pbft->stop();
 }
 
@@ -62,6 +64,92 @@ void PBFTInitializer::init(NodeConfig::Ptr _nodeConfig,
     createPBFT(
         _nodeConfig, _protocolInitializer, _networkInitializer, _storage, _ledger, _dispatcher);
     createSync(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger, _dispatcher);
+    registerHandlers();
+}
+
+void PBFTInitializer::registerHandlers()
+{
+    // register handlers for the txpool to interact with the sealer
+    std::weak_ptr<SealerInterface> weakedSealer = m_sealer;
+    m_txpool->registerUnsealedTxsNotifier(
+        [weakedSealer](size_t _unsealedTxsSize, std::function<void(Error::Ptr)> _onRecv) {
+            try
+            {
+                auto sealer = weakedSealer.lock();
+                if (!sealer)
+                {
+                    return;
+                }
+                sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
+            }
+            catch (std::exception const& e)
+            {
+                INITIALIZER_LOG(WARNING)
+                    << LOG_DESC("call UnsealedTxsNotifier to the sealer exception")
+                    << LOG_KV("error", boost::diagnostic_information(e));
+            }
+        });
+
+    // register handlers for the consensus to interact with the sealer
+    m_pbft->registerSealProposalNotifier(
+        [weakedSealer](size_t _proposalIndex, size_t _proposalEndIndex, size_t _maxTxsToSeal,
+            std::function<void(Error::Ptr)> _onRecvResponse) {
+            try
+            {
+                auto sealer = weakedSealer.lock();
+                if (!sealer)
+                {
+                    return;
+                }
+                sealer->asyncNotifySealProposal(
+                    _proposalIndex, _proposalEndIndex, _maxTxsToSeal, _onRecvResponse);
+            }
+            catch (std::exception const& e)
+            {
+                INITIALIZER_LOG(WARNING) << LOG_DESC("call notify proposal sealing exception")
+                                         << LOG_KV("error", boost::diagnostic_information(e));
+            }
+        });
+
+    // the consensus module notify the latest blockNumber to the sealer
+    m_pbft->registerStateNotifier([weakedSealer](bcos::protocol::BlockNumber _blockNumber) {
+        try
+        {
+            auto sealer = weakedSealer.lock();
+            if (!sealer)
+            {
+                return;
+            }
+            sealer->asyncNoteLatestBlockNumber(_blockNumber);
+        }
+        catch (std::exception const& e)
+        {
+            INITIALIZER_LOG(WARNING)
+                << LOG_DESC("call notify the latest block number to the sealer exception")
+                << LOG_KV("error", boost::diagnostic_information(e));
+        }
+    });
+
+    // the consensus moudle notify new block to the sync module
+    std::weak_ptr<BlockSyncInterface> weakedSync = m_blockSync;
+    m_pbft->registerNewBlockNotifier([weakedSync](bcos::ledger::LedgerConfig::Ptr _ledgerConfig,
+                                         std::function<void(Error::Ptr)> _onRecv) {
+        try
+        {
+            auto sync = weakedSync.lock();
+            if (!sync)
+            {
+                return;
+            }
+            sync->asyncNotifyNewBlock(_ledgerConfig, _onRecv);
+        }
+        catch (std::exception const& e)
+        {
+            INITIALIZER_LOG(WARNING)
+                << LOG_DESC("call notify the latest block to the sync module exception")
+                << LOG_KV("error", boost::diagnostic_information(e));
+        }
+    });
 }
 
 void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
@@ -147,7 +235,7 @@ void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
     // create pbft
     auto pbftFactory = std::make_shared<PBFTFactory>(_protocolInitializer->cryptoSuite(),
         _protocolInitializer->keyPair(), _networkInitializer->frontService(), _storage, _ledger,
-        m_txpool, m_sealer, _dispatcher, _protocolInitializer->blockFactory(),
+        m_txpool, _dispatcher, _protocolInitializer->blockFactory(),
         _protocolInitializer->txResultFactory());
     m_pbft = pbftFactory->createPBFT();
     auto pbftConfig = m_pbft->pbftEngine()->pbftConfig();
