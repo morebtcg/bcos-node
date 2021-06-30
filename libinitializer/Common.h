@@ -35,6 +35,9 @@ namespace bcos
 {
 namespace initializer
 {
+DERIVE_BCOS_EXCEPTION(InvalidConfig);
+DERIVE_BCOS_EXCEPTION(OpenDBFailed);
+
 inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
 {
     auto keyContent = readContents(boost::filesystem::path(_keyPath));

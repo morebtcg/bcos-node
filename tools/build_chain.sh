@@ -401,7 +401,7 @@ help() {
 Usage:
     -c <node count>                     [Optional] install node count, default 4
     -d <output dir>                     [Optional] output directory, default ./nodes
-    -e <mini-consensus exec>                   [Required] mini-consensus binay exec
+    -e <mini-consensus exec>            [Required] mini-consensus binay exec
     -p <listenPort>                     [Optional] start listen port, default 30300
     -s <SM model>                       [Optional] SM SSL connection or not, default no
     -h Help
