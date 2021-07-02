@@ -25,11 +25,20 @@
 #include <bcos-crypto/hash/SM3.h>
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
+
+#ifdef USE_TARS
+#include "bcos-tars-services/protocols/BlockHeaderImpl.h"
+#include "bcos-tars-services/protocols/BlockImpl.h"
+#include "bcos-tars-services/protocols/TransactionImpl.h"
+#include "bcos-tars-services/protocols/TransactionReceiptImpl.h"
+#include "bcos-tars-services/protocols/TransactionSubmitResultImpl.h"
+#else
 #include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockHeaderFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBTransactionFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBTransactionReceiptFactory.h>
+#endif
 
 using namespace bcos;
 using namespace bcos::protocol;
@@ -47,15 +56,8 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
     createCryptoSuite();
     INITIALIZER_LOG(INFO) << LOG_DESC("init crypto suite success");
 
-    // create the block factory
-    // TODO: pb/tars option
-    auto blockHeaderFactory = std::make_shared<PBBlockHeaderFactory>(m_cryptoSuite);
-    auto transactionFactory = std::make_shared<PBTransactionFactory>(m_cryptoSuite);
-    auto receiptFactory = std::make_shared<PBTransactionReceiptFactory>(m_cryptoSuite);
-    m_blockFactory =
-        std::make_shared<PBBlockFactory>(blockHeaderFactory, transactionFactory, receiptFactory);
     m_cryptoSuite->setKeyFactory(_nodeConfig->keyFactory());
-    m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
+    createFactory();
     INITIALIZER_LOG(INFO) << LOG_DESC("init blockFactory success");
 
     loadKeyPair(_nodeConfig);
@@ -86,3 +88,29 @@ void ProtocolInitializer::loadKeyPair(NodeConfig::Ptr _nodeConfig)
     INITIALIZER_LOG(INFO) << LOG_DESC("loadKeyPair success")
                           << LOG_KV("privateKeyPath", _nodeConfig->privateKeyPath());
 }
+
+#ifdef USE_TARS
+void ProtocolInitializer::createFactory()
+{
+    auto blockHeaderFactory =
+        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(m_cryptoSuite);
+    auto transactionFactory =
+        std::make_shared<bcostars::protocol::TransactionFactoryImpl>(m_cryptoSuite);
+    auto receiptFactory =
+        std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(m_cryptoSuite);
+    m_blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
+        m_cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
+    m_txResultFactory = std::make_shared<bcostars::protocol::TransactionSubmitResultFactoryImpl>();
+}
+#else
+void ProtocolInitializer::createFactory()
+{
+    // create the block factory
+    auto blockHeaderFactory = std::make_shared<PBBlockHeaderFactory>(m_cryptoSuite);
+    auto transactionFactory = std::make_shared<PBTransactionFactory>(m_cryptoSuite);
+    auto receiptFactory = std::make_shared<PBTransactionReceiptFactory>(m_cryptoSuite);
+    m_blockFactory =
+        std::make_shared<PBBlockFactory>(blockHeaderFactory, transactionFactory, receiptFactory);
+    m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
+}
+#endif

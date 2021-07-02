@@ -79,6 +79,11 @@ include(ProjectExecutor)
 # copy .clang-format into the project path
 include(CopyClangFormat)
 
+if (DEFINED USE_TARS)
+    include(Tars)
+    add_definitions(-DUSE_TARS)
+endif()
+
 add_subdirectory(demo)
 add_subdirectory(libinitializer)
 
