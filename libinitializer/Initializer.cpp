@@ -35,15 +35,11 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_logInitializer = std::make_shared<BoostLogInitializer>();
         m_logInitializer->initLog(pt);
 
-        boost::property_tree::ptree genesisConfig;
-        boost::property_tree::read_ini(_genesisFile, genesisConfig);
-        BCOS_LOG(INFO) << LOG_DESC("init config") << LOG_KV("ini", _configFilePath)
-                       << LOG_KV("genesis", _genesisFile);
-
         // loadConfig
         m_nodeConfig =
             std::make_shared<NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
-        m_nodeConfig->loadConfig(pt, genesisConfig);
+        m_nodeConfig->loadConfig(_configFilePath);
+        m_nodeConfig->loadGenesisConfig(_genesisFile);
 
         // init the protocol
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
@@ -90,10 +86,10 @@ void Initializer::start()
     {
         if (m_dispatcherInitializer)
             m_dispatcherInitializer->start();
-        if (m_networkInitializer)
-            m_networkInitializer->start();
         if (m_pbftInitializer)
             m_pbftInitializer->start();
+        if (m_networkInitializer)
+            m_networkInitializer->start();
     }
     catch (std::exception const& e)
     {

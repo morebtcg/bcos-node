@@ -19,7 +19,7 @@ macOS=""
 x86_64_arch="true"
 sm2_params="sm_sm2.param"
 cdn_link_header="https://osp-1257653870.cos.ap-guangzhou.myqcloud.com/FISCO-BCOS"
-TASSL_CMD="${HOME}"/.fisco/tassl
+OPENSSL_CMD="openssl"
 nodeid_list=""
 nodes_json_file_name="nodes.json"
 
@@ -70,34 +70,6 @@ check_env() {
     fi
     if [ "$(uname -m)" != "x86_64" ]; then
         x86_64_arch="false"
-    fi
-}
-
-check_and_install_tassl() {
-    if [[ "${sm_mode}" == "true" ]]; then
-        if [ ! -f "${TASSL_CMD}" ]; then
-            # TODO: add tassl v1.1 version binary exec
-            local tassl_link_perfix="${cdn_link_header}/FISCO-BCOS/tools/tassl-1.0.2"
-            LOG_INFO "Downloading tassl binary from ${tassl_link_perfix}..."
-            if [[ -n "${macOS}" ]]; then
-                curl -#LO "${tassl_link_perfix}/tassl_mac.tar.gz"
-                mv tassl_mac.tar.gz tassl.tar.gz
-            else
-                if [[ "$(uname -p)" == "aarch64" ]]; then
-                    curl -#LO "${tassl_link_perfix}/tassl-aarch64.tar.gz"
-                    mv tassl-aarch64.tar.gz tassl.tar.gz
-                elif [[ "$(uname -p)" == "x86_64" ]]; then
-                    curl -#LO "${tassl_link_perfix}/tassl.tar.gz"
-                else
-                    LOG_ERROR "Unsupported platform: $(uname -p)"
-                    exit 1
-                fi
-            fi
-            tar zxvf tassl.tar.gz && rm tassl.tar.gz
-            chmod u+x tassl
-            mkdir -p "${HOME}"/.fisco
-            mv tassl "${HOME}"/.fisco/tassl
-        fi
     fi
 }
 
@@ -347,8 +319,8 @@ gen_sm_chain_cert() {
     mkdir -p "$chaindir"
     dir_must_exists "$chaindir"
 
-    "$TASSL_CMD" genpkey -paramfile "${sm2_params}" -out "$chaindir/sm_ca.key"
-    "$TASSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt"
+    "$OPENSSL_CMD" genpkey -paramfile "${sm2_params}" -out "$chaindir/sm_ca.key"
+    "$OPENSSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt"
     cp "${sm_cert_conf}" "${chaindir}"
     cp "${sm2_params}" "${chaindir}"
 }
@@ -366,11 +338,11 @@ gen_sm_node_cert_with_ext() {
     file_must_not_exists "$ndpath/sm_${type}.crt"
     file_must_not_exists "$ndpath/sm_${type}.key"
 
-    "$TASSL_CMD" genpkey -paramfile "$capath/${sm2_params}" -out "$certpath/sm_${type}.key"
-    "$TASSL_CMD" req -new -subj "/CN=$name/O=fisco-bcos/OU=${type}" -key "$certpath/sm_${type}.key" -config "$capath/sm_cert.cnf" -out "$certpath/sm_${type}.csr"
+    "$OPENSSL_CMD" genpkey -paramfile "$capath/${sm2_params}" -out "$certpath/sm_${type}.key"
+    "$OPENSSL_CMD" req -new -subj "/CN=$name/O=fisco-bcos/OU=${type}" -key "$certpath/sm_${type}.key" -config "$capath/sm_cert.cnf" -out "$certpath/sm_${type}.csr"
 
     echo "not use $(basename "$capath") to sign $(basename $certpath) ${type}" >>"${logfile}"
-    "$TASSL_CMD" x509 -sm3 -req -CA "$capath/sm_ca.crt" -CAkey "$capath/sm_ca.key" -days "${days}" -CAcreateserial -in "$certpath/sm_${type}.csr" -out "$certpath/sm_${type}.crt" -extfile "$capath/sm_cert.cnf" -extensions "$extensions"
+    "$OPENSSL_CMD" x509 -sm3 -req -CA "$capath/sm_ca.crt" -CAkey "$capath/sm_ca.key" -days "${days}" -CAcreateserial -in "$certpath/sm_${type}.csr" -out "$certpath/sm_${type}.crt" -extfile "$capath/sm_cert.cnf" -extensions "$extensions"
 
     rm -f "$certpath/sm_${type}.csr"
 }
@@ -391,7 +363,7 @@ gen_sm_node_cert() {
     cat "${capath}/sm_ca.crt" >>"$ndpath/sm_ssl.crt"
     gen_sm_node_cert_with_ext "$capath" "$ndpath" "$node" ennode v3enc_req
     #nodeid is pubkey
-    $TASSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$ndpath/sm_ssl.nodeid"
+    $OPENSSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$ndpath/sm_ssl.nodeid"
 
     cp "$capath/sm_ca.crt" "$ndpath"
 }
@@ -722,11 +694,11 @@ generate_node_account()
         mkdir -p ${output_path}
     fi
     if [ ! -f /tmp/secp256k1.param ];then
-        ${TASSL_CMD} ecparam -out /tmp/secp256k1.param -name secp256k1
+        ${OPENSSL_CMD} ecparam -out /tmp/secp256k1.param -name secp256k1
     fi
-    ${TASSL_CMD} genpkey -paramfile /tmp/secp256k1.param -out ${output_path}/node.pem
+    ${OPENSSL_CMD} genpkey -paramfile /tmp/secp256k1.param -out ${output_path}/node.pem
     # generate nodeid
-    ${TASSL_CMD} ec -text -noout -in "${output_path}/node.pem" 2> /dev/null | sed -n '7,11p' | tr -d ": \n" | awk '{print substr($0,3);}' | cat >"$output_path"/node.nodeid
+    ${OPENSSL_CMD} ec -text -noout -in "${output_path}/node.pem" 2> /dev/null | sed -n '7,11p' | tr -d ": \n" | awk '{print substr($0,3);}' | cat >"$output_path"/node.nodeid
     local node_id=$(cat "${output_path}/node.nodeid")
     nodeid_list=$"${nodeid_list}node.${node_index}=${node_id}: 1
     "
@@ -741,8 +713,8 @@ generate_sm_node_account()
     if [ ! -f ${sm2_params} ];then
         generate_sm_sm2_param ${sm2_params}
     fi
-    ${TASSL_CMD} genpkey -paramfile ${sm2_params} -out ${output_path}/node.pem 2>/dev/null
-    $TASSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$output_path/sm_node.nodeid"
+    ${OPENSSL_CMD} genpkey -paramfile ${sm2_params} -out ${output_path}/node.pem 2>/dev/null
+    $OPENSSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$output_path/sm_node.nodeid"
     local node_id=$(cat "${output_path}/sm_node.nodeid")
     nodeid_list=$"${nodeid_list}node.${node_index}=${node_id},1
     "
@@ -775,7 +747,6 @@ EOF
 main() {
     check_env
     # FIXME: use openssl 1.1 to generate gm certificates
-    check_and_install_tassl
     parse_params "$@"
 
     if [[ ! -f "$fisco_bcos_exec" ]]; then

@@ -72,8 +72,8 @@ include(InstallBcosGateWayDependencies)
 include(InstallBcosDispatcherDependencies)
 
 hunter_add_package(evmc)
-set(EXECUTOR_URL https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/06c2bd7bae00c3a3eb9e0028fe2cb0c9c378e43f.tar.gz)
-set(EXECUTOR_URL_SHA256 53d8d36d9a9ad9623c4ee942cc071bc4a7e8aea1213b245c9cbdb94d64579f1b)
+set(EXECUTOR_URL https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/fea320afb54a6e3344a5c20b573556ed492e9a3f.tar.gz)
+set(EXECUTOR_URL_SHA256 a117e27fd2f0d74620678f73d33c1ff8f3bb13cf542031c605d2eb21586fe6fc)
 include(ProjectExecutor)
 
 # copy .clang-format into the project path

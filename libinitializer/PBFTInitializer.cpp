@@ -150,6 +150,27 @@ void PBFTInitializer::registerHandlers()
                 << LOG_KV("error", boost::diagnostic_information(e));
         }
     });
+
+    m_pbft->registerCommittedProposalNotifier(
+        [weakedSync](bcos::protocol::BlockNumber _committedProposal,
+            std::function<void(Error::Ptr)> _onRecv) {
+            try
+            {
+                auto sync = weakedSync.lock();
+                if (!sync)
+                {
+                    return;
+                }
+                sync->asyncNotifyCommittedIndex(_committedProposal, _onRecv);
+            }
+            catch (std::exception const& e)
+            {
+                INITIALIZER_LOG(WARNING) << LOG_DESC(
+                                                "call notify the latest committed proposal index "
+                                                "to the sync module exception")
+                                         << LOG_KV("error", boost::diagnostic_information(e));
+            }
+        });
 }
 
 void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
