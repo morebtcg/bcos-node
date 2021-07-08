@@ -20,7 +20,7 @@
  */
 #include "StorageInitializer.h"
 #include <bcos-storage/KVDBImpl.h>
-#include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
+#include <bcos-storage/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
 
 using namespace bcos;

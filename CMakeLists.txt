@@ -71,14 +71,6 @@ include(InstallBcosFrontDependencies)
 include(InstallBcosGateWayDependencies)
 include(InstallBcosDispatcherDependencies)
 
-# hunter_add_package(evmc)
-# find_package(evmc CONFIG REQUIRED)
-# hunter_add_package(intx)
-# find_package(intx CONFIG REQUIRED)
-# hunter_add_package(ethash)
-# find_package(ethash CONFIG REQUIRED)
-# hunter_add_package(evmone)
-# find_package(evmone CONFIG REQUIRED)
 include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path

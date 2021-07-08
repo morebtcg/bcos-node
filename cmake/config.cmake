@@ -32,9 +32,9 @@ hunter_config(rocksdb VERSION 6.20.3
     WITH_TOOLS=OFF PORTABLE=ON FAIL_ON_WARNINGS=OFF WITH_ZSTD=ON
 )
 
-hunter_config(bcos-storage VERSION 3.0.0-local-fd54aded3
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/fd54aded32982e23d008f587248099928ec8bdb3.tar.gz"
-    SHA1 ae2d0c2ec7c8ce5f4bbe3575ae6b5495596e0bfe
+hunter_config(bcos-storage VERSION 3.0.0-local-c4dfb130
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/7584b308b4ffd3d712d8a1bb0578052c379e4bc6.tar.gz"
+    SHA1 6b75e684d135a7a11317eef72126be43c6a7ec72
 )
 
 hunter_config(bcos-ledger
