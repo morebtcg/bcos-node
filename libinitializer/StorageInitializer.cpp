@@ -41,6 +41,7 @@ void StorageInitializer::init(NodeConfig::Ptr _nodeConfig)
     auto adapter =
         factory->createAdapter(_nodeConfig->stateDBName(), RocksDBAdapter::TABLE_PERFIX_LENGTH);
     auto storage = std::make_shared<StorageImpl>(adapter, kvDB);
-    storage->disableCache();
+    // storage->disableCache();
+    storage->start();
     m_storage = storage;
 }

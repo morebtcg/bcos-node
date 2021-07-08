@@ -33,6 +33,14 @@ public:
     StorageInitializer() = default;
     virtual ~StorageInitializer() {}
 
+    void stop()
+    {
+        if (m_storage)
+        {
+            m_storage->stop();
+        }
+    }
+
     virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig);
     bcos::storage::StorageInterface::Ptr storage() { return m_storage; }
 

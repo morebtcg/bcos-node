@@ -51,25 +51,25 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             _configFilePath, m_nodeConfig, m_protocolInitializer->keyPair()->publicKey());
 
         // init the storage
-        auto storageInitializer = std::make_shared<StorageInitializer>();
-        storageInitializer->init(m_nodeConfig);
+        m_storageInitializer = std::make_shared<StorageInitializer>();
+        m_storageInitializer->init(m_nodeConfig);
 
         // init the ledger
         m_ledgerInitializer = std::make_shared<LedgerInitializer>();
         m_ledgerInitializer->init(
-            m_protocolInitializer->blockFactory(), storageInitializer->storage(), m_nodeConfig);
+            m_protocolInitializer->blockFactory(), m_storageInitializer->storage(), m_nodeConfig);
 
         // init the dispatcher
         m_dispatcherInitializer = std::make_shared<DispatcherInitializer>();
         m_dispatcherInitializer->init(m_nodeConfig, m_protocolInitializer,
-            m_ledgerInitializer->ledger(), storageInitializer->storage());
+            m_ledgerInitializer->ledger(), m_storageInitializer->storage());
 
         auto dispatcher = m_dispatcherInitializer->dispatcher();
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
         m_pbftInitializer->init(m_nodeConfig, m_protocolInitializer, m_networkInitializer,
-            m_ledgerInitializer->ledger(), dispatcher, storageInitializer->storage());
+            m_ledgerInitializer->ledger(), dispatcher, m_storageInitializer->storage());
 
         dispatcher->init(m_pbftInitializer->txpool());
     }
@@ -103,13 +103,25 @@ void Initializer::stop()
     try
     {
         if (m_networkInitializer)
+        {
             m_networkInitializer->stop();
+        }
         if (m_pbftInitializer)
+        {
             m_pbftInitializer->stop();
+        }
         if (m_dispatcherInitializer)
+        {
             m_dispatcherInitializer->stop();
+        }
         if (m_logInitializer)
+        {
             m_logInitializer->stopLogging();
+        }
+        if (m_storageInitializer)
+        {
+            m_storageInitializer->stop();
+        }
     }
     catch (std::exception const& e)
     {

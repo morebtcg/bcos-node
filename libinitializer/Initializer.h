@@ -58,6 +58,7 @@ private:
     BoostLogInitializer::Ptr m_logInitializer;
     NetworkInitializer::Ptr m_networkInitializer;
     PBFTInitializer::Ptr m_pbftInitializer;
+    StorageInitializer::Ptr m_storageInitializer;
 
     std::shared_ptr<DispatcherInitializer> m_dispatcherInitializer;
 };
