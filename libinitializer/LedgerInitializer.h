@@ -24,7 +24,7 @@
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 
 namespace bcos
 {

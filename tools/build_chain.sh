@@ -482,7 +482,7 @@ if [ -z "\${pid}" ];then
         echo "    \${node} is not running"
         exit 0
 fi
-kill -9 "\${pid}"
+kill "\${pid}"
 echo "stop \${node} successfully"
 EOF
     chmod u+x "${output}/stop.sh"
