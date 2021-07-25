@@ -25,6 +25,7 @@
 #include "libinitializer/NetworkInitializer.h"
 #include "libinitializer/PBFTInitializer.h"
 #include "libinitializer/ProtocolInitializer.h"
+#include "libinitializer/RpcInitializer.h"
 #include "libinitializer/StorageInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
@@ -59,6 +60,7 @@ private:
     NetworkInitializer::Ptr m_networkInitializer;
     PBFTInitializer::Ptr m_pbftInitializer;
     StorageInitializer::Ptr m_storageInitializer;
+    RpcInitializer::Ptr m_rpcInitializer;
 
     std::shared_ptr<DispatcherInitializer> m_dispatcherInitializer;
 };

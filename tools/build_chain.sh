@@ -3,7 +3,9 @@
 dirpath="$(cd "$(dirname "$0")" && pwd)"
 listen_ip="0.0.0.0"
 port_start=(30300)
+rpc_port_start=(20200)
 p2p_listen_port=port_start[0]
+rpc_listen_port=rpc_port_start[0]
 use_ip_param=
 fisco_bcos_exec=""
 ip_array=
@@ -267,7 +269,7 @@ gen_chain_cert() {
     mkdir -p "$chaindir"
     dir_must_exists "$chaindir"
 
-    openssl genrsa -out "${chaindir}"/ca.key "${rsa_key_length}" 2> /dev/null
+    openssl genrsa -out "${chaindir}"/ca.key "${rsa_key_length}" 2>/dev/null
     openssl req -new -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "${chaindir}"/ca.key -out "${chaindir}"/ca.crt 2>/dev/null
     mv "${cert_conf}" "${chaindir}"
 
@@ -289,7 +291,7 @@ gen_rsa_node_cert() {
     mkdir -p "${ndpath}"
     dir_must_exists "${ndpath}"
 
-    openssl genrsa -out "${ndpath}"/ssl.key "${rsa_key_length}" 2> /dev/null
+    openssl genrsa -out "${ndpath}"/ssl.key "${rsa_key_length}" 2>/dev/null
     openssl req -new -sha256 -subj "/CN=FISCO-BCOS/O=fisco-bcos/OU=agency" -key "$ndpath"/ssl.key -config "$capath"/cert.cnf -out "$ndpath"/ssl.csr
     openssl x509 -req -days "${days}" -sha256 -CA "${capath}"/ca.crt -CAkey "$capath"/ca.key -CAcreateserial \
         -in "$ndpath"/ssl.csr -out "$ndpath"/ssl.crt -extensions v4_req -extfile "$capath"/cert.cnf 2>/dev/null
@@ -377,7 +379,8 @@ Usage:
     -l <IP list>                        [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
     -o <output dir>                     [Optional] output directory, default ./nodes
     -e <mini-consensus exec>            [Required] mini-consensus binay exec
-    -p <Start Port>                     Default 30300 means p2p_port start from 30300
+    -p <P2P start Port>                 Default 30300 means p2p_port start from 30300
+    -P <RPC Start Port>                 Default 20200 means rpc_port start from 20200
     -s <SM model>                       [Optional] SM SSL connection or not, default no
     -h Help
 e.g
@@ -389,9 +392,10 @@ EOF
 }
 
 parse_params() {
-    while getopts "l:o:e:p:sh" option; do
+    while getopts "l:o:e:p:P:sh" option; do
         case $option in
-        l) ip_param=$OPTARG
+        l)
+            ip_param=$OPTARG
             use_ip_param="true"
             ;;
         o)
@@ -400,9 +404,14 @@ parse_params() {
             dir_must_exists "${output_dir}"
             ;;
         e) fisco_bcos_exec="$OPTARG" ;;
-        p) port_start=(${OPTARG//,/ })
-        if [ ${#port_start[@]} -ne 1 ];then LOG_WARN "start port error. e.g: 30300" && exit 1;fi
-        ;;
+        p)
+            port_start=(${OPTARG//,/ })
+            if [ ${#port_start[@]} -ne 1 ]; then LOG_WARN "p2p start port error. e.g: 30300" && exit 1; fi
+            ;;
+        P)
+            rpc_port_start=(${OPTARG//,/ })
+            if [ ${#rpc_port_start[@]} -ne 1 ]; then LOG_WARN "rpc start port error. e.g: 20200" && exit 1; fi
+            ;;
         s) sm_mode="true" ;;
         h) help ;;
         *) help ;;
@@ -521,7 +530,7 @@ generate_node_cert() {
     fi
 }
 
-generate_chain_cert(){
+generate_chain_cert() {
     local sm_mode="$1"
     local chain_cert_path="$2"
     mkdir -p "${chain_cert_path}"
@@ -533,16 +542,22 @@ generate_chain_cert(){
 }
 generate_config_ini() {
     local output="${1}"
-    local listen_port="${2}"
+    local p2p_listen_port="${2}"
+    local rpc_listen_port="${3}"
     local file_dir="./"
     cat <<EOF >"${output}"
 [p2p]
     listen_ip=${listen_ip}
-    listen_port=${listen_port}
+    listen_port=${p2p_listen_port}
     ; ssl or sm ssl
     sm_ssl=false
     nodes_path=${file_dir}
     nodes_file=${nodes_json_file_name}
+
+[rpc]
+    listen_ip=${listen_ip}
+    listen_port=${rpc_listen_port}
+    thread_count=4
 
 [cert]
     ; directory the certificates located in
@@ -605,15 +620,21 @@ EOF
 
 generate_sm_config_ini() {
     local output=${1}
-    local listen_port="${2}"
+    local p2p_listen_port="${2}"
+    local rpc_listen_port="${3}"
     cat <<EOF >"${output}"
 [p2p]
     listen_ip=${listen_ip}
-    listen_port=${listen_port}
+    listen_port=${p2p_listen_port}
     ; ssl or sm ssl
     sm_ssl=true
     nodes_path=${file_dir}
     nodes_file=${nodes_json_file_name}
+
+[rpc]
+    listen_ip=${listen_ip}
+    listen_port=${rpc_listen_port}
+    thread_count=16
 
 [cert]
     ; directory the certificates located in
@@ -639,7 +660,7 @@ generate_nodes_json() {
     local ip_array=(${ip_params//,/ })
     local ip_length=${#ip_array[@]}
     local i=0
-    for ((; i < ip_length; i++)); do
+    for (( ; i < ip_length; i++)); do
         local ip=${ip_array[i]}
         local delim=""
         if [[ $i == $((ip_length - 1)) ]]; then
@@ -655,46 +676,44 @@ generate_nodes_json() {
 EOF
 }
 
-generate_config()
-{
+generate_config() {
     local sm_mode="${1}"
     local node_config_path="${2}"
     local node_json_config_path="${3}"
     local connected_nodes="${4}"
-    local listen_port="${5}"
+    local p2p_listen_port="${5}"
+    local rpc_listen_port="${6}"
     if [ "${sm_mode}" == "false" ]; then
-        generate_config_ini "${node_config_path}" "${listen_port}"
+        generate_config_ini "${node_config_path}" "${p2p_listen_port}" "${rpc_listen_port}"
     else
-        generate_sm_config_ini "${node_config_path}" "${listen_port}"
+        generate_sm_config_ini "${node_config_path}" "${p2p_listen_port}" "${rpc_listen_port}"
     fi
     generate_nodes_json "${node_json_config_path}/${nodes_json_file_name}" "${connected_nodes}"
 }
 
-generate_node_account()
-{
+generate_node_account() {
     local output_path="${1}"
     local node_index="${2}"
-    if [ ! -d "${output_path}" ];then
+    if [ ! -d "${output_path}" ]; then
         mkdir -p ${output_path}
     fi
-    if [ ! -f /tmp/secp256k1.param ];then
+    if [ ! -f /tmp/secp256k1.param ]; then
         ${OPENSSL_CMD} ecparam -out /tmp/secp256k1.param -name secp256k1
     fi
     ${OPENSSL_CMD} genpkey -paramfile /tmp/secp256k1.param -out ${output_path}/node.pem
     # generate nodeid
-    ${OPENSSL_CMD} ec -text -noout -in "${output_path}/node.pem" 2> /dev/null | sed -n '7,11p' | tr -d ": \n" | awk '{print substr($0,3);}' | cat >"$output_path"/node.nodeid
+    ${OPENSSL_CMD} ec -text -noout -in "${output_path}/node.pem" 2>/dev/null | sed -n '7,11p' | tr -d ": \n" | awk '{print substr($0,3);}' | cat >"$output_path"/node.nodeid
     local node_id=$(cat "${output_path}/node.nodeid")
     nodeid_list=$"${nodeid_list}node.${node_index}=${node_id}: 1
     "
 }
 
-generate_sm_node_account()
-{
+generate_sm_node_account() {
     local output_path="${1}"
-    if [ ! -d "${output_path}" ];then
+    if [ ! -d "${output_path}" ]; then
         mkdir -p ${output_path}
     fi
-    if [ ! -f ${sm2_params} ];then
+    if [ ! -f ${sm2_params} ]; then
         generate_sm_sm2_param ${sm2_params}
     fi
     ${OPENSSL_CMD} genpkey -paramfile ${sm2_params} -out ${output_path}/node.pem 2>/dev/null
@@ -704,8 +723,7 @@ generate_sm_node_account()
     "
 }
 
-generate_genesis_config()
-{
+generate_genesis_config() {
     local output=${1}
     local node_list=${2}
 
@@ -728,43 +746,38 @@ generate_genesis_config()
 EOF
 }
 
-parse_ip_config()
-{
+parse_ip_config() {
     local config=$1
     n=0
-    while read line;do
+    while read line; do
         ip_array[n]=$(echo ${line} | awk '{print $1}')
         agency_array[n]=$(echo ${line} | awk '{print $2}')
         group_array[n]=$(echo ${line} | awk '{print $3}')
-        if [ -z "${ip_array[$n]}" -o -z "${agency_array[$n]}" -o -z "${group_array[$n]}" ];then
+        if [ -z "${ip_array[$n]}" -o -z "${agency_array[$n]}" -o -z "${group_array[$n]}" ]; then
             exit_with_clean "Please check ${config}, make sure there is no empty line!"
         fi
         ((++n))
-    done < ${config}
+    done <${config}
 }
 
-get_value()
-{
+get_value() {
     local var_name=${1}
     var_name=var_${var_name//./}
     local res=$(eval echo '$'"${var_name}")
     echo ${res}
 }
 
-
-set_value()
-{
+set_value() {
     local var_name=${1}
     var_name=var_${var_name//./}
     local var_value=${2}
     eval "${var_name}=${var_value}"
 }
 
-exit_with_clean()
-{
+exit_with_clean() {
     local content=${1}
     echo -e "\033[31m[ERROR] ${content}\033[0m"
-    if [ -d "${output_dir}" ];then
+    if [ -d "${output_dir}" ]; then
         rm -rf ${output_dir}
     fi
     exit 1
@@ -775,14 +788,14 @@ main() {
     parse_params "$@"
 
     [ -z $use_ip_param ] && help 'ERROR: Please set -l or -f option.'
-    if [ "${use_ip_param}" == "true" ];then
+    if [ "${use_ip_param}" == "true" ]; then
         ip_array=(${ip_param//,/ })
-    elif [ "${use_ip_param}" == "false" ];then
-        if ! parse_ip_config $ip_file ;then 
+    elif [ "${use_ip_param}" == "false" ]; then
+        if ! parse_ip_config $ip_file; then
             exit_with_clean "Parse $ip_file error!"
         fi
-    else 
-        help 
+    else
+        help
     fi
     check_env
     if [[ ! -f "$fisco_bcos_exec" ]]; then
@@ -793,23 +806,23 @@ main() {
     local count=0
     connected_nodes=""
     # Note: must generate the node account firstly
-    for line in ${ip_array[*]};do
+    for line in ${ip_array[*]}; do
         ip=${line%:*}
         num=${line#*:}
-        if [ -z $(echo $ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$") ];then
+        if [ -z $(echo $ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$") ]; then
             LOG_WARN "Please check IP address: ${ip}, if you use domain name please ignore this."
         fi
         [ "$num" == "$ip" ] || [ -z "${num}" ] && num=${node_num}
-        echo "Processing IP:${ip} Total:${num}" 
+        echo "Processing IP:${ip} Total:${num}"
         [ -z "$(get_value ${ip//./}_count)" ] && set_value ${ip//./}_count 0
-        
+
         nodes_dir="${output_dir}/${ip}"
         # start_all.sh and stop_all.sh
         generate_all_node_scripts "${nodes_dir}"
         cp "${fisco_bcos_exec}" "${nodes_dir}"
         ca_cert_dir="${nodes_dir}"/ca
         generate_chain_cert "${sm_mode}" "${ca_cert_dir}"
-        for ((i=0;i<num;++i));do
+        for ((i = 0; i < num; ++i)); do
             local node_coount=$(get_value ${ip//./}_count)
             node_dir="${output_dir}/${ip}/node${node_coount}"
             mkdir -p "${node_dir}"
@@ -825,7 +838,7 @@ main() {
             else
                 generate_sm_node_account "${account_dir}" "${node_count}"
             fi
-            set_value ${ip//./}_count $(( $(get_value ${ip//./}_count) + 1 ))
+            set_value ${ip//./}_count $(($(get_value ${ip//./}_count) + 1))
             ((++count))
             ((++node_count))
         done
@@ -833,21 +846,22 @@ main() {
 
     local i=0
     local count=0
-    for line in ${ip_array[*]};do
+    for line in ${ip_array[*]}; do
         ip=${line%:*}
         num=${line#*:}
-        if [ -z $(echo $ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$") ];then
+        if [ -z $(echo $ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$") ]; then
             LOG_WARN "Please check IP address: ${ip}, if you use domain name please ignore this."
         fi
-        [ "$num" == "$ip" ] || [ -z "${num}" ] && num=${node_num} 
+        [ "$num" == "$ip" ] || [ -z "${num}" ] && num=${node_num}
         set_value ${ip//./}_count 0
-        for ((i=0;i<num;++i));do
+        for ((i = 0; i < num; ++i)); do
             local node_coount=$(get_value ${ip//./}_count)
             node_dir="${output_dir}/${ip}/node${node_coount}"
-            local port=$((p2p_listen_port + node_coount))
-            generate_config "${sm_mode}" "${node_dir}/config.ini" "${node_dir}" "${connected_nodes}" "${port}"
+            local p2p_port=$((p2p_listen_port + node_coount))
+            local rpc_port=$((rpc_listen_port + node_coount))
+            generate_config "${sm_mode}" "${node_dir}/config.ini" "${node_dir}" "${connected_nodes}" "${p2p_port}" "${rpc_port}"
             generate_genesis_config "${node_dir}/config.genesis" "${nodeid_list}"
-            set_value ${ip//./}_count $(( $(get_value ${ip//./}_count) + 1 ))
+            set_value ${ip//./}_count $(($(get_value ${ip//./}_count) + 1))
             ((++count))
         done
     done

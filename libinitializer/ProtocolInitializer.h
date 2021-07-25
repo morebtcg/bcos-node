@@ -47,6 +47,10 @@ public:
     }
 
     bcos::crypto::KeyPairInterface::Ptr keyPair() const { return m_keyPair; }
+    bcos::protocol::TransactionFactory::Ptr transactionFactory() const
+    {
+        return m_transactionFactory;
+    }
 
 private:
     void createCryptoSuite();
@@ -59,6 +63,7 @@ private:
     bcos::protocol::BlockFactory::Ptr m_blockFactory;
     bcos::protocol::TransactionSubmitResultFactory::Ptr m_txResultFactory;
     bcos::crypto::KeyPairInterface::Ptr m_keyPair;
+    bcos::protocol::TransactionFactory::Ptr m_transactionFactory;
 };
 }  // namespace initializer
 }  // namespace bcos

@@ -21,6 +21,7 @@
 #include "Initializer.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-gateway/Gateway.h>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -45,6 +46,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
         m_protocolInitializer->init(m_nodeConfig);
 
+        std::string nodeID = m_protocolInitializer->keyPair()->publicKey()->hex();
         // init the network
         m_networkInitializer = std::make_shared<NetworkInitializer>();
         m_networkInitializer->init(
@@ -71,6 +73,20 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_pbftInitializer->init(m_nodeConfig, m_protocolInitializer, m_networkInitializer,
             m_ledgerInitializer->ledger(), dispatcher, m_storageInitializer->storage());
 
+        m_rpcInitializer = std::make_shared<RpcInitializer>();
+        m_rpcInitializer->setNodeID(nodeID);
+        m_rpcInitializer->setNodeConfig(m_nodeConfig);
+        m_rpcInitializer->setLedger(m_ledgerInitializer->ledger());
+        m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
+        m_rpcInitializer->setExecutorInterface(m_dispatcherInitializer->executor());
+        m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
+        m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
+        m_rpcInitializer->setGatewayInterface(
+            std::dynamic_pointer_cast<bcos::gateway::GatewayInterface>(
+                m_networkInitializer->gateway()));
+        m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
+        m_rpcInitializer->init(_configFilePath);
+
         dispatcher->init(m_pbftInitializer->txpool());
     }
     catch (std::exception const& e)
@@ -85,11 +101,24 @@ void Initializer::start()
     try
     {
         if (m_dispatcherInitializer)
+        {
             m_dispatcherInitializer->start();
+        }
+
         if (m_pbftInitializer)
+        {
             m_pbftInitializer->start();
+        }
+
         if (m_networkInitializer)
+        {
             m_networkInitializer->start();
+        }
+
+        if (m_rpcInitializer)
+        {
+            m_rpcInitializer->start();
+        }
     }
     catch (std::exception const& e)
     {
@@ -102,6 +131,10 @@ void Initializer::stop()
 {
     try
     {
+        if (m_rpcInitializer)
+        {
+            m_rpcInitializer->stop();
+        }
         if (m_networkInitializer)
         {
             m_networkInitializer->stop();

@@ -101,6 +101,7 @@ void ProtocolInitializer::createFactory()
     m_blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
         m_cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
     m_txResultFactory = std::make_shared<bcostars::protocol::TransactionSubmitResultFactoryImpl>();
+    m_transactionFactory = transactionFactory;
 }
 #else
 void ProtocolInitializer::createFactory()
@@ -112,5 +113,6 @@ void ProtocolInitializer::createFactory()
     m_blockFactory =
         std::make_shared<PBBlockFactory>(blockHeaderFactory, transactionFactory, receiptFactory);
     m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
+    m_transactionFactory = transactionFactory;
 }
 #endif

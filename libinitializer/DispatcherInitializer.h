@@ -43,6 +43,7 @@ public:
         bcos::storage::StorageInterface::Ptr _stateStorage);
 
     bcos::dispatcher::DispatcherImpl::Ptr dispatcher() { return m_dispatcher; }
+    std::shared_ptr<bcos::executor::ExecutorInterface> executor() { return m_executor;} 
 
     virtual void start();
     virtual void stop();

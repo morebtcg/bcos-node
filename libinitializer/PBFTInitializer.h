@@ -49,6 +49,9 @@ public:
 
     // for mini-consensus
     bcos::txpool::TxPoolInterface::Ptr txpool() { return m_txpool; }
+    bcos::sync::BlockSync::Ptr blockSync() { return m_blockSync; }
+    bcos::consensus::PBFTImpl::Ptr pbft() { return m_pbft; }
+
 
 protected:
     virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig,

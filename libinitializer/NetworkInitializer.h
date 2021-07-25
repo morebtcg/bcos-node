@@ -22,6 +22,7 @@
 #pragma once
 #include "libinitializer/Common.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
+#include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/protocol/Protocol.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <memory>
@@ -55,6 +56,7 @@ public:
     virtual void stop();
 
     bcos::front::FrontServiceInterface::Ptr frontService();
+    std::shared_ptr<bcos::gateway::Gateway> gateway() { return m_gateWay; }
 
     virtual void registerMsgDispatcher(bcos::protocol::ModuleID _moduleID,
         std::function<void(
