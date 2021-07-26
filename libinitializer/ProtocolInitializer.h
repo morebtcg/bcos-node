@@ -57,6 +57,7 @@ private:
     void createSMCryptoSuite();
     void loadKeyPair(bcos::tool::NodeConfig::Ptr _nodeConfig);
     void createFactory();
+    void createPBFactory();
 
 private:
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;

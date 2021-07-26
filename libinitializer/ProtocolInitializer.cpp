@@ -26,19 +26,17 @@
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
 
-#ifdef USE_TARS
 #include "bcos-tars-services/protocols/BlockHeaderImpl.h"
 #include "bcos-tars-services/protocols/BlockImpl.h"
 #include "bcos-tars-services/protocols/TransactionImpl.h"
 #include "bcos-tars-services/protocols/TransactionReceiptImpl.h"
 #include "bcos-tars-services/protocols/TransactionSubmitResultImpl.h"
-#else
+
 #include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockHeaderFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBTransactionFactory.h>
 #include <bcos-framework/libprotocol/protobuf/PBTransactionReceiptFactory.h>
-#endif
 
 using namespace bcos;
 using namespace bcos::protocol;
@@ -57,7 +55,11 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
     INITIALIZER_LOG(INFO) << LOG_DESC("init crypto suite success");
 
     m_cryptoSuite->setKeyFactory(_nodeConfig->keyFactory());
+#ifdef USE_PB
+    createPBFactory();
+#else
     createFactory();
+#endif
     INITIALIZER_LOG(INFO) << LOG_DESC("init blockFactory success");
 
     loadKeyPair(_nodeConfig);
@@ -89,7 +91,6 @@ void ProtocolInitializer::loadKeyPair(NodeConfig::Ptr _nodeConfig)
                           << LOG_KV("privateKeyPath", _nodeConfig->privateKeyPath());
 }
 
-#ifdef USE_TARS
 void ProtocolInitializer::createFactory()
 {
     auto blockHeaderFactory =
@@ -103,8 +104,8 @@ void ProtocolInitializer::createFactory()
     m_txResultFactory = std::make_shared<bcostars::protocol::TransactionSubmitResultFactoryImpl>();
     m_transactionFactory = transactionFactory;
 }
-#else
-void ProtocolInitializer::createFactory()
+
+void ProtocolInitializer::createPBFactory()
 {
     // create the block factory
     auto blockHeaderFactory = std::make_shared<PBBlockHeaderFactory>(m_cryptoSuite);
@@ -115,4 +116,3 @@ void ProtocolInitializer::createFactory()
     m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
     m_transactionFactory = transactionFactory;
 }
-#endif

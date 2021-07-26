@@ -79,13 +79,13 @@ include(InstallBcosGateWayDependencies)
 include(InstallBcosDispatcherDependencies)
 include(InstallBcosRpcDependencies)
 include(ProjectBCOSExecutor)
+include(Tars)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)
 
-if (DEFINED USE_TARS)
-    include(Tars)
-    add_definitions(-DUSE_TARS)
+if (DEFINED USE_PB)
+    add_definitions(-DUSE_PB)
 endif()
 
 add_subdirectory(demo)

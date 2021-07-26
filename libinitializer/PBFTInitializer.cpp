@@ -89,6 +89,24 @@ void PBFTInitializer::registerHandlers()
                     << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
+    // handler to notify the sealer reset the sealing proposals
+    m_pbft->registerSealerResetNotifier([weakedSealer](
+                                            std::function<void(bcos::Error::Ptr)> _onRecv) {
+        try
+        {
+            auto sealer = weakedSealer.lock();
+            if (!sealer)
+            {
+                return;
+            }
+            sealer->asyncResetSealing(_onRecv);
+        }
+        catch (std::exception const& e)
+        {
+            INITIALIZER_LOG(WARNING) << LOG_DESC("call asyncResetSealing to the sealer exception")
+                                     << LOG_KV("error", boost::diagnostic_information(e));
+        }
+    });
 
     // register handlers for the consensus to interact with the sealer
     m_pbft->registerSealProposalNotifier(

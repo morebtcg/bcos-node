@@ -96,8 +96,8 @@ jobs:
           cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
         run: make -j2
-  build_with_gcc_tars:
-    name: build_with_gcc_tars
+  build_with_gcc_pb:
+    name: build_with_gcc_pb
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -128,7 +128,7 @@ jobs:
         run: sudo apt install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
         run: |
-          cmake . -DTESTS=ON -DCOVERAGE=ON -DUSE_TARS=ON
+          cmake . -DTESTS=ON -DCOVERAGE=ON -DUSE_PB=ON
       - name: compile
         run: make -j2
   build_with_centos:
@@ -159,9 +159,11 @@ jobs:
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
-          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel && source /opt/rh/devtoolset-7/enable
+          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex bison && source /opt/rh/devtoolset-7/enable
       - name: configure and compile
         run: |
+          git config --global user.email "test@test.com"
+          git config --global user.name "test"
           cargo --version
           source /opt/rh/devtoolset-7/enable
           mkdir -p build && cd build
