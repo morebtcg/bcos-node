@@ -22,13 +22,37 @@
 #include <include/BuildInfo.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <atomic>
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <memory>
+
 namespace bcos
 {
 namespace node
 {
+class ExitHandler
+{
+public:
+    void exit() { exitHandler(0); }
+    static void exitHandler(int) { ExitHandler::c_shouldExit.store(true); }
+    bool shouldExit() const { return ExitHandler::c_shouldExit.load(); }
+
+    static std::atomic_bool c_shouldExit;
+};
+std::atomic_bool ExitHandler::c_shouldExit = {false};
+
+void setDefaultOrCLocale()
+{
+#if __unix__
+    if (!std::setlocale(LC_ALL, ""))
+    {
+        setenv("LC_ALL", "C", 1);
+    }
+#endif
+}
+
 void printVersion()
 {
     std::cout << "FISCO-BCOS Version : " << FISCO_BCOS_PROJECT_VERSION << std::endl;
@@ -46,7 +70,7 @@ struct Params
     float txSpeed;
 };
 
-Params initCommandLine(int argc, const char* argv[])
+Params initCommandLine(int argc, const char* argv[], bool _autoSendTx)
 {
     boost::program_options::options_description main_options("Usage of FISCO-BCOS");
     main_options.add_options()("help,h", "print help information")(
@@ -54,8 +78,13 @@ Params initCommandLine(int argc, const char* argv[])
         boost::program_options::value<std::string>()->default_value("./config.ini"),
         "config file path, eg. config.ini")("genesis,g",
         boost::program_options::value<std::string>()->default_value("./config.genesis"),
-        "genesis config file path, eg. genesis.ini")(
-        "txSpeed,t", boost::program_options::value<float>(), "transaction generate speed");
+        "genesis config file path, eg. genesis.ini");
+
+    if (_autoSendTx)
+    {
+        main_options.add_options()(
+            "txSpeed,t", boost::program_options::value<float>(), "transaction generate speed");
+    }
     boost::program_options::variables_map vm;
     try
     {
@@ -109,9 +138,12 @@ Params initCommandLine(int argc, const char* argv[])
         exit(0);
     }
     float txSpeed = 10;
-    if (vm.count("txSpeed") || vm.count("t"))
+    if (_autoSendTx)
     {
-        txSpeed = vm["txSpeed"].as<float>();
+        if (vm.count("txSpeed") || vm.count("t"))
+        {
+            txSpeed = vm["txSpeed"].as<float>();
+        }
     }
     return Params{configPath, genesisFilePath, txSpeed};
 }

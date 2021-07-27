@@ -2,20 +2,19 @@
 
 dirpath="$(cd "$(dirname "$0")" && pwd)"
 listen_ip="0.0.0.0"
-port_start=(30300)
-rpc_port_start=(20200)
+port_start=(30300 20200)
 p2p_listen_port=port_start[0]
-rpc_listen_port=rpc_port_start[0]
+rpc_listen_port=port_start[1]
 use_ip_param=
 fisco_bcos_exec=""
 ip_array=
 output_dir="./nodes"
-binary_name="mini-consensus"
+binary_name="fisco-bcos"
 
 # for cert generation
 ca_cert_dir="${dirpath}"
-cert_conf="${output_dir}/cert.cnf"
 sm_cert_conf='sm_cert.cnf'
+cert_conf="${output_dir}/cert.cnf"
 days=36500
 rsa_key_length=2048
 sm_mode='false'
@@ -376,23 +375,22 @@ help() {
     echo $1
     cat <<EOF
 Usage:
-    -l <IP list>                        [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
-    -o <output dir>                     [Optional] output directory, default ./nodes
-    -e <mini-consensus exec>            [Required] mini-consensus binay exec
-    -p <P2P start Port>                 Default 30300 means p2p_port start from 30300
-    -P <RPC Start Port>                 Default 20200 means rpc_port start from 20200
-    -s <SM model>                       [Optional] SM SSL connection or not, default no
+    -l <IP list>                       [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
+    -o <output dir>                    [Optional] output directory, default ./nodes
+    -e <fisco-bcos exec>               [Required] fisco-bcos binay exec
+    -p <Start Port>                    Default 30300,20200 means p2p_port start from 30300, rpc_port from 20200
+    -s <SM model>                      [Optional] SM SSL connection or not, default no
     -h Help
 e.g
-    bash $0 -p 30300 -l 127.0.0.1:4 -o nodes -e ./mini-consensus
-    bash $0 -p 30300 -l 127.0.0.1:4 -o nodes -e ./mini-consensus -s
+    bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./fisco-bcos
+    bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./fisco-bcos -s
 EOF
 
     exit 0
 }
 
 parse_params() {
-    while getopts "l:o:e:p:P:sh" option; do
+    while getopts "l:o:e:p:sh" option; do
         case $option in
         l)
             ip_param=$OPTARG
@@ -406,11 +404,7 @@ parse_params() {
         e) fisco_bcos_exec="$OPTARG" ;;
         p)
             port_start=(${OPTARG//,/ })
-            if [ ${#port_start[@]} -ne 1 ]; then LOG_WARN "p2p start port error. e.g: 30300" && exit 1; fi
-            ;;
-        P)
-            rpc_port_start=(${OPTARG//,/ })
-            if [ ${#rpc_port_start[@]} -ne 1 ]; then LOG_WARN "rpc start port error. e.g: 20200" && exit 1; fi
+            if [ ${#port_start[@]} -ne 2 ]; then LOG_WARN "p2p start port error. e.g: 30300" && exit 1; fi
             ;;
         s) sm_mode="true" ;;
         h) help ;;
@@ -423,7 +417,7 @@ print_result() {
     echo "=============================================================="
     LOG_INFO "Start Port        : ${port_start[*]}"
     LOG_INFO "Server IP         : ${ip_array[*]}"
-    LOG_INFO "SSL Model         : ${ssl_model}"
+    LOG_INFO "SM Model         : ${sm_mode}"
     LOG_INFO "output dir         : ${output_dir}"
     LOG_INFO "All completed. Files in ${output_dir}"
 }
@@ -467,55 +461,94 @@ EOF
     chmod u+x "${output}/stop_all.sh"
 }
 
+generate_script_template()
+{
+    local filepath=$1
+    mkdir -p $(dirname $filepath)
+    cat << EOF > "${filepath}"
+#!/bin/bash
+SHELL_FOLDER=\$(cd \$(dirname \$0);pwd)
+
+LOG_ERROR() {
+    content=\${1}
+    echo -e "\033[31m[ERROR] \${content}\033[0m"
+}
+
+LOG_INFO() {
+    content=\${1}
+    echo -e "\033[32m[INFO] \${content}\033[0m"
+}
+
+EOF
+    chmod +x ${filepath}
+}
+
 generate_node_scripts() {
     local output=${1}
+    local ps_cmd="\$(ps aux|grep \${fisco_bcos}|grep -v grep|awk '{print \$2}')"
+    local start_cmd="nohup \${fisco_bcos} -c config.ini -g config.genesis >>nohup.out 2>&1 &"
+    local pid="pid"
+    local log_cmd="tail -n20  nohup.out"
+    local check_success="\$(${log_cmd} | grep running)"
 
-    cat <<EOF >"${output}/start.sh"
-#!/bin/bash
-dirpath="\$(cd "\$(dirname "\$0")" && pwd)"
-cd "\${dirpath}"
-
-config=\${dirpath}/config.ini
-node=\$(basename \${dirpath})
-pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
-if [ -n "\${pid}" ];then
-        echo "    \${node} is running, pid is \${pid}"
-        exit 0
+    generate_script_template "$output/start.sh"
+    cat <<EOF >> "${output}/start.sh"
+fisco_bcos=\${SHELL_FOLDER}/../${binary_name}
+cd \${SHELL_FOLDER}
+node=\$(basename \${SHELL_FOLDER})
+node_pid=${ps_cmd}
+if [ ! -z \${node_pid} ];then
+    echo " \${node} is running, ${pid} is \$node_pid."
+    exit 0
+else 
+    ${start_cmd}
+    sleep 1.5
 fi
-nohup ../${binary_name} -c \${dirpath}/config.ini -g \${dirpath}/config.genesis &
+try_times=4
+i=0
+while [ \$i -lt \${try_times} ]
+do
+    node_pid=${ps_cmd}
+    success_flag=${check_success}
+    if [[ ! -z \${node_pid} && ! -z "\${success_flag}" ]];then
+        echo -e "\033[32m \${node} start successfully\033[0m"
+        exit 0
+    fi
+    sleep 0.5
+    ((i=i+1))
+done
+echo -e "\033[31m  Exceed waiting time. Please try again to start \${node} \033[0m"
+${log_cmd}
 EOF
     chmod u+x "${output}/start.sh"
-    cat <<EOF >"${output}/stop.sh"
-#!/bin/bash
-dirpath="\$(cd "\$(dirname "\$0")" && pwd)"
-cd "\${dirpath}"
 
-config=\${dirpath}/config.ini
-node=\$(basename \${dirpath})
-pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
-if [ -z "\${pid}" ];then
-        echo "    \${node} is not running"
-        exit 0
+    local stop_cmd="kill \${node_pid}"
+    generate_script_template "$output/stop.sh"
+    cat <<EOF >> "${output}/stop.sh"
+fisco_bcos=\${SHELL_FOLDER}/../${binary_name}
+node=\$(basename \${SHELL_FOLDER})
+node_pid=${ps_cmd}
+try_times=10
+i=0
+if [ -z \${node_pid} ];then
+    echo " \${node} isn't running."
+    exit 0
 fi
-kill "\${pid}"
-echo "stop \${node} successfully"
+[ ! -z \${node_pid} ] && ${stop_cmd} > /dev/null
+while [ \$i -lt \${try_times} ]
+do
+    sleep 1
+    node_pid=${ps_cmd}
+    if [ -z \${node_pid} ];then
+        echo -e "\033[32m stop \${node} success.\033[0m"
+        exit 0
+    fi
+    ((i=i+1))
+done
+echo "  Exceed maximum number of retries. Please try again to stop \${node}"
+exit 1
 EOF
     chmod u+x "${output}/stop.sh"
-    cat <<EOF >"${output}/check.sh"
-#!/bin/bash
-dirpath="\$(cd "\$(dirname "\$0")" && pwd)"
-cd "\${dirpath}"
-
-config=\${dirpath}/config.ini
-node=\$(basename \${dirpath})
-pid=\$(ps aux | grep \${config} | grep -v grep | awk '{print \$2}')
-if [ -z "\${pid}" ];then
-        echo "    \${node} is not running"
-else
-        echo "    \${node} is running, pid=\${pid}"
-fi
-EOF
-    chmod u+x "${output}/check.sh"
 }
 
 generate_node_cert() {
@@ -786,7 +819,9 @@ exit_with_clean() {
 main() {
     # FIXME: use openssl 1.1 to generate gm certificates
     parse_params "$@"
-
+    cert_conf="${output_dir}/cert.cnf"
+    p2p_listen_port=port_start[0]
+    rpc_listen_port=port_start[1]
     [ -z $use_ip_param ] && help 'ERROR: Please set -l or -f option.'
     if [ "${use_ip_param}" == "true" ]; then
         ip_array=(${ip_param//,/ })

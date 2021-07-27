@@ -53,16 +53,16 @@ public:
     LedgerInitializer::Ptr ledgerInitializer() { return m_ledgerInitializer; }
 
 private:
+    BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
-    LedgerInitializer::Ptr m_ledgerInitializer;
-    BoostLogInitializer::Ptr m_logInitializer;
     NetworkInitializer::Ptr m_networkInitializer;
-    PBFTInitializer::Ptr m_pbftInitializer;
     StorageInitializer::Ptr m_storageInitializer;
-    RpcInitializer::Ptr m_rpcInitializer;
 
+    LedgerInitializer::Ptr m_ledgerInitializer;
     std::shared_ptr<DispatcherInitializer> m_dispatcherInitializer;
+    PBFTInitializer::Ptr m_pbftInitializer;
+    RpcInitializer::Ptr m_rpcInitializer;
 };
 }  // namespace initializer
 }  // namespace bcos

@@ -74,10 +74,10 @@ protected:
     virtual void registerHandlers();
 
 private:
-    bcos::txpool::TxPool::Ptr m_txpool;
     bcos::sealer::Sealer::Ptr m_sealer;
-    bcos::consensus::PBFTImpl::Ptr m_pbft;
     bcos::sync::BlockSync::Ptr m_blockSync;
+    bcos::txpool::TxPool::Ptr m_txpool;
+    bcos::consensus::PBFTImpl::Ptr m_pbft;
 };
 }  // namespace initializer
 }  // namespace bcos

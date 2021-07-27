@@ -147,13 +147,13 @@ void Initializer::stop()
         {
             m_dispatcherInitializer->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
         if (m_storageInitializer)
         {
             m_storageInitializer->stop();
+        }
+        if (m_logInitializer)
+        {
+            m_logInitializer->stopLogging();
         }
     }
     catch (std::exception const& e)

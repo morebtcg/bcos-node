@@ -18,7 +18,7 @@
  * @author: yujiechen
  * @date 2021-06-10
  */
-#include "demo/utilities/Common.h"
+#include "fisco-bcos/utilities/Common.h"
 #include "libinitializer/Initializer.h"
 #include <bcos-framework/testutils/protocol/FakeTransaction.h>
 using namespace bcos;
@@ -165,7 +165,7 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
 
 int main(int argc, const char* argv[])
 {
-    auto param = initCommandLine(argc, argv);
+    auto param = initCommandLine(argc, argv, true);
     auto initializer = std::make_shared<Initializer>();
     printVersion();
     std::cout << "[" << getCurrentDateTime() << "] ";

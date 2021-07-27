@@ -88,7 +88,7 @@ if (DEFINED USE_PB)
     add_definitions(-DUSE_PB)
 endif()
 
-add_subdirectory(demo)
+add_subdirectory(fisco-bcos)
 add_subdirectory(libinitializer)
 
 if (TESTS)
