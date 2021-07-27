@@ -855,14 +855,14 @@ main() {
         ca_cert_dir="${nodes_dir}"/ca
         generate_chain_cert "${sm_mode}" "${ca_cert_dir}"
         for ((i = 0; i < num; ++i)); do
-            local node_coount=$(get_value ${ip//./}_count)
-            node_dir="${output_dir}/${ip}/node${node_coount}"
+            local node_count=$(get_value ${ip//./}_count)
+            node_dir="${output_dir}/${ip}/node${node_count}"
             mkdir -p "${node_dir}"
             generate_node_cert "${sm_mode}" "${ca_cert_dir}" "${node_dir}/conf"
             generate_node_scripts "${node_dir}"
             account_dir="${node_dir}/conf"
 
-            local port=$((p2p_listen_port + node_coount))
+            local port=$((p2p_listen_port + node_count))
             connected_nodes=${connected_nodes}"${ip}:${port}, "
 
             if [[ "${sm_mode}" == "false" ]]; then
@@ -887,10 +887,10 @@ main() {
         [ "$num" == "$ip" ] || [ -z "${num}" ] && num=${node_num}
         set_value ${ip//./}_count 0
         for ((i = 0; i < num; ++i)); do
-            local node_coount=$(get_value ${ip//./}_count)
-            node_dir="${output_dir}/${ip}/node${node_coount}"
-            local p2p_port=$((p2p_listen_port + node_coount))
-            local rpc_port=$((rpc_listen_port + node_coount))
+            local node_count=$(get_value ${ip//./}_count)
+            node_dir="${output_dir}/${ip}/node${node_count}"
+            local p2p_port=$((p2p_listen_port + node_count))
+            local rpc_port=$((rpc_listen_port + node_count))
             generate_config "${sm_mode}" "${node_dir}/config.ini" "${node_dir}" "${connected_nodes}" "${p2p_port}" "${rpc_port}"
             generate_genesis_config "${node_dir}/config.genesis" "${nodeid_list}"
             set_value ${ip//./}_count $(($(get_value ${ip//./}_count) + 1))
