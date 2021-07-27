@@ -617,12 +617,9 @@ generate_common_ini() {
     group_id=test_group
     ; the chain id, should nerver be changed
     chain_id=test_chain
-    ; the block limit, should nerver be changed
-    block_limit=1000
 
 [security]
     private_key_path=conf/node.pem
-    checkpoint_timeout=3000
 
 [consensus]
     ; min block generation time(ms)
