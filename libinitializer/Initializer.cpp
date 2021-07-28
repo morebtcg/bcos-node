@@ -85,7 +85,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             std::dynamic_pointer_cast<bcos::gateway::GatewayInterface>(
                 m_networkInitializer->gateway()));
         m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
-        m_rpcInitializer->init(_configFilePath);
+        m_rpcInitializer->init(m_nodeConfig, _configFilePath);
 
         dispatcher->init(m_pbftInitializer->txpool());
     }

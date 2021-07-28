@@ -25,7 +25,7 @@
 using namespace bcos;
 using namespace bcos::initializer;
 
-void RpcInitializer::init(const std::string& _configPath)
+void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::string& _configPath)
 {
     bcos::rpc::NodeInfo nodeInfo;
     nodeInfo.nodeID = m_nodeID;
@@ -34,6 +34,8 @@ void RpcInitializer::init(const std::string& _configPath)
     nodeInfo.version = FISCO_BCOS_PROJECT_VERSION;
     nodeInfo.buildTime = FISCO_BCOS_BUILD_TIME;
     nodeInfo.gitCommitHash = FISCO_BCOS_COMMIT_HASH;
+    nodeInfo.isSM = _nodeConfig->smCryptoType();
+    nodeInfo.isWasm = _nodeConfig->isWasm();
 
     INITIALIZER_LOG(INFO) << LOG_BADGE("RpcInitializer::init") << LOG_KV("config", _configPath)
                           << LOG_KV("nodeID", nodeInfo.nodeID)

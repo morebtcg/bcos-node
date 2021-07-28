@@ -42,7 +42,7 @@ public:
     ~RpcInitializer() { stop(); }
 
 public:
-    void init(const std::string& _configPath);
+    void init(bcos::tool::NodeConfig::Ptr, const std::string& _configPath);
 
     void start();
     void stop();
