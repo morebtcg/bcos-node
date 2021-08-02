@@ -5,7 +5,7 @@ set (DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR}/deps)
 include(FetchContent)
 FetchContent_Declare(bcos-tars-services
     GIT_REPOSITORY https://${URL_BASE}/FISCO-BCOS/bcos-tars-services.git
-    GIT_TAG dev
+    GIT_TAG 67b7a0e2366e6c6e076532f51a7a0d410f992c9f
     SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-tars-services
 )
 FetchContent_Populate(bcos-tars-services)

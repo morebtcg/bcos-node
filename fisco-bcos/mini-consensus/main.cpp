@@ -126,15 +126,15 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
             }
             else
             {
-                tx = bcos::test::fakeTransaction(cryptoSuite, keyPair, bytes(),
+                tx = bcos::test::fakeTransaction(cryptoSuite, keyPair, "",
                     helloWorldDeployInput, nonce, txBlockLimit, chainId, groupId);
             }
 #endif
             tx = _initializer->protocolInitializer()
                      ->blockFactory()
                      ->transactionFactory()
-                     ->createTransaction(0, bytes(), helloWorldDeployInput, nonce, txBlockLimit,
-                         chainId, groupId, 0, keyPair);
+                     ->createTransaction(0, "", helloWorldDeployInput, nonce, txBlockLimit, chainId,
+                         groupId, 0, keyPair);
 
             auto encodedTxData = tx->encode();
             auto txData = std::make_shared<bytes>(encodedTxData.begin(), encodedTxData.end());
