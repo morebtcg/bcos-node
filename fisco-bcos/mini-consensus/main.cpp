@@ -105,11 +105,14 @@ inline void createAndSubmitTx(Initializer::Ptr _initializer, float txSpeed)
     {
         try
         {
-            if (txsNum % 500 == 0)
+            if (txsNum % 100 == 0)
             {
                 ledger->asyncGetBlockNumber([&](Error::Ptr _error, BlockNumber _blockNumber) {
                     if (_error)
                     {
+                        BCOS_LOG(ERROR) << LOG_DESC("asyncGetBlockNumber failed")
+                                        << LOG_KV("code", _error->errorCode())
+                                        << LOG_KV("msg", _error->errorMessage());
                         return;
                     }
                     blockNumber = _blockNumber;
