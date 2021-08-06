@@ -21,6 +21,7 @@
 #include "RpcInitializer.h"
 #include <bcos-rpc/rpc/RpcFactory.h>
 #include <include/BuildInfo.h>
+#include <memory>
 
 using namespace bcos;
 using namespace bcos::initializer;
@@ -52,8 +53,33 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
     factory->setConsensusInterface(m_consensusInterface);
     factory->setBlockSyncInterface(m_blockSyncInterface);
     factory->setGatewayInterface(m_gatewayInterface);
+    factory->setFrontServiceInterface(m_frontService);
     factory->setTransactionFactory(m_transactionFactory);
+    factory->setKeyFactory(_nodeConfig->keyFactory());
+
     auto rpc = factory->buildRpc(_configPath, nodeInfo);
+    auto amop = rpc->AMOP();
+    auto amopWeak = std::weak_ptr<bcos::amop::AMOP>(amop);
+
+    // init AMOP message handler
+    m_networkInitializer->registerMsgDispatcher(bcos::protocol::ModuleID::AMOP,
+        [amopWeak](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id, bytesConstRef _data) {
+            auto amop = amopWeak.lock();
+            if (amop)
+            {
+                amop->asyncNotifyAmopMessage(_nodeID, _id, _data);
+            }
+        });
+
+    m_networkInitializer->registerGetNodeIDsDispatcher(bcos::protocol::ModuleID::AMOP,
+        [amopWeak](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+            bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+            auto amop = amopWeak.lock();
+            if (amop)
+            {
+                amop->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
+            }
+        });
 
     m_rpcInterface = rpc;
 }

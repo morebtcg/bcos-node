@@ -20,8 +20,10 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
+#include "libinitializer/NetworkInitializer.h"
 #include <bcos-framework/interfaces/consensus/ConsensusInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
+#include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
@@ -92,6 +94,18 @@ public:
         m_gatewayInterface = _gatewayInterface;
     }
 
+    bcos::front::FrontServiceInterface::Ptr frontService() const { return m_frontService; }
+    void setFrontService(bcos::front::FrontServiceInterface::Ptr _frontService)
+    {
+        m_frontService = _frontService;
+    }
+
+    NetworkInitializer::Ptr networkInitializer() const { return m_networkInitializer; }
+    void setNetworkInitializer(NetworkInitializer::Ptr _networkInitializer)
+    {
+        m_networkInitializer = _networkInitializer;
+    }
+
     void setTransactionFactory(bcos::protocol::TransactionFactory::Ptr _transactionFactory)
     {
         m_transactionFactory = _transactionFactory;
@@ -105,6 +119,8 @@ public:
 
 public:
     std::string m_nodeID;
+    NetworkInitializer::Ptr m_networkInitializer;
+    bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::rpc::RPCInterface::Ptr m_rpcInterface;
     bcos::ledger::LedgerInterface::Ptr m_ledgerInterface;
     std::shared_ptr<bcos::executor::ExecutorInterface> m_executorInterface;

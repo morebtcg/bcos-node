@@ -75,7 +75,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         m_rpcInitializer = std::make_shared<RpcInitializer>();
         m_rpcInitializer->setNodeID(nodeID);
+        m_rpcInitializer->setNetworkInitializer(m_networkInitializer);
         m_rpcInitializer->setNodeConfig(m_nodeConfig);
+        m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
         m_rpcInitializer->setLedger(m_ledgerInitializer->ledger());
         m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
         m_rpcInitializer->setExecutorInterface(m_dispatcherInitializer->executor());
