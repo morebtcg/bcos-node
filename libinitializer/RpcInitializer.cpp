@@ -47,7 +47,7 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
                           << LOG_KV("gitCommitHash", nodeInfo.gitCommitHash);
 
     auto factory = std::make_shared<bcos::rpc::RpcFactory>();
-    factory->setLedger(m_ledgerInterface);
+    factory->setLedger(m_ledger);
     factory->setTxPoolInterface(m_txPoolInterface);
     factory->setExecutorInterface(m_executorInterface);
     factory->setConsensusInterface(m_consensusInterface);
@@ -60,6 +60,8 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
     auto rpc = factory->buildRpc(_configPath, nodeInfo);
     auto amop = rpc->AMOP();
     auto amopWeak = std::weak_ptr<bcos::amop::AMOP>(amop);
+    auto wsService = rpc->wsService();
+    auto wsServiceWeakPtr = std::weak_ptr<bcos::ws::WsService>(wsService);
 
     // init AMOP message handler
     m_networkInitializer->registerMsgDispatcher(bcos::protocol::ModuleID::AMOP,
@@ -79,6 +81,20 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
             {
                 amop->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
             }
+        });
+
+    // register blockNumber notifier
+    // TODO: why?
+    auto ledger = (bcos::ledger::Ledger*)m_ledger.get();
+    ledger->registerCommittedBlockNotifier(
+        [wsServiceWeakPtr](
+            bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback) {
+            auto wsService = wsServiceWeakPtr.lock();
+            if (wsService)
+            {
+                wsService->notifyBlockNumberToClient(_blockNumber);
+            }
+            _callback(nullptr);
         });
 
     m_rpcInterface = rpc;

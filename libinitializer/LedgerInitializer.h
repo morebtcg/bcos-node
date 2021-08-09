@@ -20,7 +20,6 @@
  */
 #pragma once
 #include "libinitializer/Common.h"
-#include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -47,10 +46,10 @@ public:
         m_ledger = ledger;
     }
 
-    bcos::ledger::LedgerInterface::Ptr ledger() { return m_ledger; }
+    bcos::ledger::Ledger::Ptr ledger() { return m_ledger; }
 
 private:
-    bcos::ledger::LedgerInterface::Ptr m_ledger;
+    bcos::ledger::Ledger::Ptr m_ledger;
 };
 }  // namespace initializer
 }  // namespace bcos

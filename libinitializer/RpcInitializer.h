@@ -25,11 +25,11 @@
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
-#include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/interfaces/sync/BlockSyncInterface.h>
 #include <bcos-framework/interfaces/txpool/TxPoolInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-ledger/libledger/Ledger.h>
 
 namespace bcos
 {
@@ -52,11 +52,8 @@ public:
 public:
     bcos::rpc::RPCInterface::Ptr rpcInterface() { return m_rpcInterface; }
 
-    bcos::ledger::LedgerInterface::Ptr ledger() const { return m_ledgerInterface; }
-    void setLedger(bcos::ledger::LedgerInterface::Ptr _ledgerInterface)
-    {
-        m_ledgerInterface = _ledgerInterface;
-    }
+    bcos::ledger::Ledger::Ptr ledger() const { return m_ledger; }
+    void setLedger(bcos::ledger::Ledger::Ptr _ledger) { m_ledger = _ledger; }
 
     std::shared_ptr<bcos::executor::ExecutorInterface> executorInterface() const
     {
@@ -122,7 +119,7 @@ public:
     NetworkInitializer::Ptr m_networkInitializer;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::rpc::RPCInterface::Ptr m_rpcInterface;
-    bcos::ledger::LedgerInterface::Ptr m_ledgerInterface;
+    bcos::ledger::Ledger::Ptr m_ledger;
     std::shared_ptr<bcos::executor::ExecutorInterface> m_executorInterface;
     bcos::txpool::TxPoolInterface::Ptr m_txPoolInterface;
     bcos::consensus::ConsensusInterface::Ptr m_consensusInterface;

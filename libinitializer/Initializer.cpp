@@ -83,9 +83,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->setExecutorInterface(m_dispatcherInitializer->executor());
         m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
         m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
-        m_rpcInitializer->setGatewayInterface(
-            std::dynamic_pointer_cast<bcos::gateway::GatewayInterface>(
-                m_networkInitializer->gateway()));
+        m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
         m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
         m_rpcInitializer->init(m_nodeConfig, _configFilePath);
 
