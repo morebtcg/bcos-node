@@ -19,7 +19,7 @@
  * @date 2021-07-15
  */
 #include "RpcInitializer.h"
-#include <bcos-rpc/rpc/RpcFactory.h>
+#include <bcos-rpc/RpcFactory.h>
 #include <include/BuildInfo.h>
 #include <memory>
 
@@ -69,7 +69,16 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
             auto amop = amopWeak.lock();
             if (amop)
             {
-                amop->asyncNotifyAmopMessage(_nodeID, _id, _data);
+                amop->asyncNotifyAmopMessage(_nodeID, _id, _data, [](bcos::Error::Ptr _error) {
+                    if (_error && _error->errorCode() != bcos::protocol::CommonError::SUCCESS)
+                    {
+                        INITIALIZER_LOG(WARNING)
+                            << LOG_BADGE("RpcInitializer::init")
+                            << LOG_DESC("asyncNotifyAmopMessage callback error")
+                            << LOG_KV("errorCode", _error ? _error->errorCode() : -1)
+                            << LOG_KV("errorMessage", _error ? _error->errorMessage() : "success");
+                    }
+                });
             }
         });
 
