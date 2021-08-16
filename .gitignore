@@ -36,4 +36,5 @@ build/
 deps/
 .DS_Store
 .vscode/
+.idea/
 .clang-format
