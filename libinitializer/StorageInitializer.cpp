@@ -32,14 +32,14 @@ void StorageInitializer::init(NodeConfig::Ptr _nodeConfig)
 {
     auto factory = std::make_shared<RocksDBAdapterFactory>(_nodeConfig->storagePath());
     auto ret =
-        factory->createRocksDB(_nodeConfig->storageDBName(), RocksDBAdapter::TABLE_PERFIX_LENGTH);
+        factory->createRocksDB(_nodeConfig->storageDBName(), RocksDBAdapter::TABLE_PREFIX_LENGTH);
     if (!ret.first)
     {
         BOOST_THROW_EXCEPTION(OpenDBFailed() << errinfo_comment("createRocksDB failed!"));
     }
     auto kvDB = std::make_shared<KVDBImpl>(ret.first);
     auto adapter =
-        factory->createAdapter(_nodeConfig->stateDBName(), RocksDBAdapter::TABLE_PERFIX_LENGTH);
+        factory->createAdapter(_nodeConfig->stateDBName(), RocksDBAdapter::TABLE_PREFIX_LENGTH);
     auto storage = std::make_shared<StorageImpl>(adapter, kvDB);
     // storage->disableCache();
     storage->start();
