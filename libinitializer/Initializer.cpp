@@ -151,10 +151,6 @@ void Initializer::stop()
         {
             m_storageInitializer->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
     }
     catch (std::exception const& e)
     {

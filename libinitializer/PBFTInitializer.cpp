@@ -238,12 +238,14 @@ void PBFTInitializer::createTxPool(NodeConfig::Ptr _nodeConfig,
                 {
                     return;
                 }
-                if (!_nodeIDs || _nodeIDs->empty())
+                NodeIDSet nodeIdSet;
+                if (_nodeIDs && !_nodeIDs->empty())
                 {
-                    return;
+                    nodeIdSet = NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
                 }
-                auto nodeIdSet = NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
-                txpool->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                auto txpoolImpl = std::dynamic_pointer_cast<TxPool>(txpool);
+                txpoolImpl->transactionSync()->config()->notifyConnectedNodes(
+                    nodeIdSet, _receiveMsgCallback);
                 INITIALIZER_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
                                        << LOG_KV("connectedNodeSize", nodeIdSet.size());
             }
@@ -329,6 +331,33 @@ void PBFTInitializer::createSync(NodeConfig::Ptr, ProtocolInitializer::Ptr _prot
             {
                 INITIALIZER_LOG(WARNING) << LOG_DESC("call Sync message dispatcher exception")
                                          << LOG_KV("error", boost::diagnostic_information(e));
+            }
+        });
+    _networkInitializer->registerGetNodeIDsDispatcher(
+        ModuleID::BlockSync, [weakSync](std::shared_ptr<const NodeIDs> _nodeIDs,
+                                 bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+            try
+            {
+                auto sync = weakSync.lock();
+                if (!sync)
+                {
+                    return;
+                }
+                NodeIDSet nodeIdSet;
+                if (_nodeIDs && !_nodeIDs->empty())
+                {
+                    nodeIdSet = NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+                }
+                auto syncImpl = std::dynamic_pointer_cast<bcos::sync::BlockSync>(sync);
+                syncImpl->config()->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                INITIALIZER_LOG(DEBUG) << LOG_DESC("BlockSync: notifyConnectedNodes")
+                                       << LOG_KV("connectedNodeSize", nodeIdSet.size());
+            }
+            catch (std::exception const& e)
+            {
+                INITIALIZER_LOG(WARNING)
+                    << LOG_DESC("call BlockSync notifyConnectedNodes dispatcher exception")
+                    << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
 }
