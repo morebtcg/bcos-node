@@ -23,8 +23,8 @@ hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/50645f54e42394fe41e29b769ab500ce444284ca.tar.gz"
-    SHA1 5c6a8781d8f88e566b296cf493272ec011332e0f
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/9ae4fc3f65096deedb064f9fbf7a0ff6b5d1e599.tar.gz"
+    SHA1 d1add6f4f4f718a277a9188f97fa98e30537d4ab
 )
 
 hunter_config(rocksdb VERSION 6.20.3
