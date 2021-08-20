@@ -22,8 +22,9 @@ macOS=""
 x86_64_arch="true"
 sm2_params="sm_sm2.param"
 cdn_link_header="https://osp-1257653870.cos.ap-guangzhou.myqcloud.com/FISCO-BCOS"
-OPENSSL_CMD="openssl"
+OPENSSL_CMD="${HOME}/.fisco/tassl"
 nodeid_list=""
+file_dir="./"
 nodes_json_file_name="nodes.json"
 
 LOG_WARN() {
@@ -61,17 +62,18 @@ file_must_exists() {
 }
 
 check_env() {
-    [ ! -z "$(openssl version | grep 1.0.2)" ] || [ ! -z "$(openssl version | grep 1.1)" ] || [ ! -z "$(openssl version | grep reSSL)" ] || {
-        #echo "download openssl from https://www.openssl.org."
-        LOG_FALT "Use \"openssl version\" command to check."
-    }
-    if [ ! -z "$(openssl version | grep reSSL)" ]; then
+    if [ "$(uname)" == "Darwin" ];then
         export PATH="/usr/local/opt/openssl/bin:$PATH"
-    fi
-    if [ "$(uname)" == "Darwin" ]; then
         macOS="macOS"
     fi
-    if [ "$(uname -m)" != "x86_64" ]; then
+    [ ! -z "$(openssl version | grep 1.0.2)" ] || [ ! -z "$(openssl version | grep 1.1)" ] || {
+        echo "please install openssl!"
+        #echo "download openssl from https://www.openssl.org."
+        echo "use \"openssl version\" command to check."
+        exit 1
+    }
+
+    if [ "$(uname -m)" != "x86_64" ];then
         x86_64_arch="false"
     fi
 }
@@ -86,7 +88,7 @@ check_name() {
 
 generate_sm_sm2_param() {
     local output=$1
-    cat <<EOF >"${output}"
+    cat << EOF > ${output} 
 -----BEGIN EC PARAMETERS-----
 BggqgRzPVQGCLQ==
 -----END EC PARAMETERS-----
@@ -362,12 +364,10 @@ gen_sm_node_cert() {
     local node=$(basename "$ndpath")
     check_name node "$node"
 
-    gen_sm_node_cert_with_ext "$capath" "$ndpath" "$node" node v3_req
-    cat "${capath}/sm_ca.crt" >>"$ndpath/sm_ssl.crt"
-    gen_sm_node_cert_with_ext "$capath" "$ndpath" "$node" ennode v3enc_req
+    gen_sm_node_cert_with_ext "$capath" "$ndpath" "$node" ssl v3_req
+    gen_sm_node_cert_with_ext "$capath" "$ndpath" "$node" enssl v3enc_req
     #nodeid is pubkey
-    $OPENSSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$ndpath/sm_ssl.nodeid"
-
+    $OPENSSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2> /dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}'  | cat > "$ndpath/sm_ssl.nodeid"
     cp "$capath/sm_ca.crt" "$ndpath"
 }
 
@@ -577,7 +577,6 @@ generate_config_ini() {
     local output="${1}"
     local p2p_listen_port="${2}"
     local rpc_listen_port="${3}"
-    local file_dir="./"
     cat <<EOF >"${output}"
 [p2p]
     listen_ip=${listen_ip}
@@ -614,9 +613,9 @@ generate_common_ini() {
     ; use SM crypto or not, should nerver be changed
     sm_crypto=${sm_mode}
     ; the group id, should nerver be changed
-    group_id=test_group
+    group_id=group
     ; the chain id, should nerver be changed
-    chain_id=test_chain
+    chain_id=chain
 
 [security]
     private_key_path=conf/node.pem
@@ -668,7 +667,7 @@ generate_sm_config_ini() {
 
 [cert]
     ; directory the certificates located in
-    ca_path=./
+    ca_path=./conf
     ; the ca certificate file
     sm_ca_cert=sm_ca.crt
     ; the node private key file
@@ -740,6 +739,7 @@ generate_node_account() {
 
 generate_sm_node_account() {
     local output_path="${1}"
+    local node_index="${2}"
     if [ ! -d "${output_path}" ]; then
         mkdir -p ${output_path}
     fi
@@ -747,9 +747,9 @@ generate_sm_node_account() {
         generate_sm_sm2_param ${sm2_params}
     fi
     ${OPENSSL_CMD} genpkey -paramfile ${sm2_params} -out ${output_path}/node.pem 2>/dev/null
-    $OPENSSL_CMD ec -in "$ndpath/sm_ssl.key" -text -noout 2>/dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}' | cat >"$output_path/sm_node.nodeid"
-    local node_id=$(cat "${output_path}/sm_node.nodeid")
-    nodeid_list=$"${nodeid_list}node.${node_index}=${node_id},1
+    $OPENSSL_CMD ec -in "$output_path/node.pem" -text -noout 2> /dev/null | sed -n '7,11p' | sed 's/://g' | tr "\n" " " | sed 's/ //g' | awk '{print substr($0,3);}'  | cat > "$output_path/node.nodeid"
+    local node_id=$(cat "${output_path}/node.nodeid")
+    nodeid_list=$"${nodeid_list}node.${node_index}=${node_id}:1
     "
 }
 
@@ -813,8 +813,37 @@ exit_with_clean() {
     exit 1
 }
 
+check_and_install_tassl(){
+if [ -n "${sm_mode}" ]; then
+    if [ ! -f "${OPENSSL_CMD}" ];then
+        local tassl_link_perfix="${cdn_link_header}/FISCO-BCOS/tools/tassl-1.0.2"
+        LOG_INFO "Downloading tassl binary from ${tassl_link_perfix}..."
+        if [[ -n "${macOS}" ]];then
+            curl -#LO "${tassl_link_perfix}/tassl_mac.tar.gz"
+            mv tassl_mac.tar.gz tassl.tar.gz
+        else
+            if [[ "$(uname -p)" == "aarch64" ]];then
+                curl -#LO "${tassl_link_perfix}/tassl-aarch64.tar.gz"
+                mv tassl-aarch64.tar.gz tassl.tar.gz
+            elif [[ "$(uname -p)" == "x86_64" ]];then
+                curl -#LO "${tassl_link_perfix}/tassl.tar.gz"
+            else
+                LOG_ERROR "Unsupported platform"
+                exit 1
+            fi
+        fi
+        tar zxvf tassl.tar.gz && rm tassl.tar.gz
+        chmod u+x tassl
+        mkdir -p "${HOME}"/.fisco
+        mv tassl "${HOME}"/.fisco/tassl
+    fi
+fi
+}
+
 main() {
     # FIXME: use openssl 1.1 to generate gm certificates
+    check_env
+    check_and_install_tassl
     parse_params "$@"
     cert_conf="${output_dir}/cert.cnf"
     p2p_listen_port=port_start[0]
@@ -829,7 +858,6 @@ main() {
     else
         help
     fi
-    check_env
     if [[ ! -f "$fisco_bcos_exec" ]]; then
         LOG_FALT "fisco bcos binary exec ${fisco_bcos_exec} not exist, please input the correct path."
     fi

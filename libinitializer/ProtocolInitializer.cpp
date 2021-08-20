@@ -51,7 +51,10 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
     {
         createSMCryptoSuite();
     }
-    createCryptoSuite();
+    else
+    {
+        createCryptoSuite();
+    }
     INITIALIZER_LOG(INFO) << LOG_DESC("init crypto suite success");
 
     m_cryptoSuite->setKeyFactory(_nodeConfig->keyFactory());
@@ -88,7 +91,8 @@ void ProtocolInitializer::loadKeyPair(NodeConfig::Ptr _nodeConfig)
     m_keyPair = m_cryptoSuite->signatureImpl()->createKeyPair(privateKey);
 
     INITIALIZER_LOG(INFO) << LOG_DESC("loadKeyPair success")
-                          << LOG_KV("privateKeyPath", _nodeConfig->privateKeyPath());
+                          << LOG_KV("privateKeyPath", _nodeConfig->privateKeyPath())
+                          << LOG_KV("publicKey", m_keyPair->publicKey()->shortHex());
 }
 
 void ProtocolInitializer::createFactory()
