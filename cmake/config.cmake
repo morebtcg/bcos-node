@@ -13,8 +13,8 @@ hunter_config(wedpr-crypto VERSION 1.1.0-10f314de
 
 hunter_config(bcos-crypto
     VERSION 3.0.0-local-43df7523
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/25c8edb7d5cbadb514bbce9733573c8ffdb3600d.tar.gz
-    SHA1 4a1649e7095f5db58a5ae0671b2278bcccc25f1d
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/255002b047b359a45c953d1dab29efd2ff6eb080.tar.gz
+    SHA1 4d02de20be1f9bf79d762c5b8686368286504e07
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
@@ -48,8 +48,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-900836da
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/91db705280f22a623aec0b301d009a7a04c0af6b.tar.gz"
-    SHA1 409007bdd6bac75743b475402970ff38a1108007
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/e18c81e1613c142c1efb8e55439e20cc953ed345.tar.gz"
+    SHA1 432cdd9b3f8f4517006cee19175258adc259a33d
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
