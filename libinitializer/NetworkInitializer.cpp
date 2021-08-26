@@ -68,8 +68,8 @@ void NetworkInitializer::start()
 }
 void NetworkInitializer::stop()
 {
-    m_gateWay->stop();
     m_frontService->stop();
+    m_gateWay->stop();
 }
 
 void NetworkInitializer::registerMsgDispatcher(ModuleID _moduleID,
