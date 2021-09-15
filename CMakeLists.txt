@@ -48,8 +48,8 @@ set(HUNTER_USE_CACHE_SERVERS NO CACHE STRING "Download cache from cache server" 
 #init hunter
 include(HunterGate)
 HunterGate(
-    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/f864aec833035825be3386db9f58320ec222cc30.tar.gz"
-    SHA1 "54f60da3c8d0fdb3066c4af336b2d8249dd06c2d"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/e427ab73280d9488bca736c53b8a52284896c759.tar.gz"
+    SHA1 "cd5b639d31eb775a5adda5f4d4a19b027d97d174"
     FILEPATH "${BCOS_NODE_CMAKE_DIR}/config.cmake"
 )
 project(bcos-node VERSION "3.0.0")
@@ -79,7 +79,7 @@ include(InstallBcosGateWayDependencies)
 include(InstallBcosDispatcherDependencies)
 include(InstallBcosRpcDependencies)
 include(ProjectBCOSExecutor)
-include(Tars)
+include(InstallBcosTarsProtocolDependencies)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)

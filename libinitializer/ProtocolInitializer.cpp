@@ -26,11 +26,11 @@
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
 
-#include "bcos-tars-services/protocols/BlockHeaderImpl.h"
-#include "bcos-tars-services/protocols/BlockImpl.h"
-#include "bcos-tars-services/protocols/TransactionImpl.h"
-#include "bcos-tars-services/protocols/TransactionReceiptImpl.h"
-#include "bcos-tars-services/protocols/TransactionSubmitResultImpl.h"
+#include <bcos-tars-protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/BlockHeaderFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionReceiptFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionSubmitResultFactoryImpl.h>
 
 #include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
 #include <bcos-framework/libprotocol/protobuf/PBBlockFactory.h>
