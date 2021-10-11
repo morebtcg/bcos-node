@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/b0d97068b7b4169b02dc9fa2870b3190b3dd3ae1.tar.gz
-    SHA1 02acb50644bdc3f16bd55d599d44ce794e4535ac
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/df18aa28dbfea3f1508b1a9009daacb301a6cc00.tar.gz
+    SHA1 408cafd738427d72085aef2efc12b709bb81351d
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON  #DEBUG=ON
 )
 
@@ -20,14 +20,14 @@ hunter_config(bcos-tars-protocol
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/7485470c370b2bf58013453db8169e2f725c5c0c.tar.gz"
-    SHA1 cb595b14e0ccdec70e9a9fde0887e55a74b295d4
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/59ea5af757a31c9324dc593b25372375c150051f.tar.gz"
+    SHA1 7006b9f4de805b414829e8492e1807b32a5017c5
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/19e45a5325c792ac49ce7e90c74117485b6d6273.tar.gz"
-    SHA1 c13badcf61ee71d001bae2afd76c2453bd97680b
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/71ac67b230640219910e27ff711e16fab1975c23.tar.gz"
+    SHA1 89eb0f2ec4e47628838c981552343cda7245798f
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -45,8 +45,8 @@ hunter_config(rocksdb VERSION 6.20.3
 )
 
 hunter_config(bcos-storage VERSION 3.0.0-local-900836da
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/900836da481856ca13a1184943bb0d18d2124a88.tar.gz"
-    SHA1 7053cf63e832367d561693e9d438e9048c087091
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/e8325fadf450a469603167f0fe59091fdc305ac8.tar.gz"
+    SHA1 8afa9dad4022dbfaf60fb05fcc4cd208d29486a3
     CMAKE_ARGS URL_BASE=${URL_BASE} CMAKE_BUILD_TYPE=Debug HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
